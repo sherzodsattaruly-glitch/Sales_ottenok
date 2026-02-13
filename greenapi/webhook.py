@@ -9,6 +9,7 @@ from fastapi import APIRouter, Request, Response
 
 from greenapi.models import WebhookPayload
 from greenapi.client import send_text
+from notifications import notify_error
 
 logger = logging.getLogger(__name__)
 
@@ -41,11 +42,12 @@ async def process_incoming_message(chat_id: str, sender_name: str, text: str):
         try:
             await handler(chat_id, sender_name, text)
         except Exception as e:
-            logger.error(f"Error processing message from {chat_id}: {e}", exc_info=True)
+            logger.error(f"[{chat_id}] Error processing message: {e}", exc_info=True)
+            await notify_error("webhook", f"chat_id={chat_id} error={e}")
             try:
                 await send_text(chat_id, "Извините, произошла ошибка. Наш менеджер скоро с вами свяжется!")
             except Exception:
-                logger.error(f"Failed to send error message to {chat_id}", exc_info=True)
+                logger.error(f"[{chat_id}] Failed to send error message", exc_info=True)
 
 
 @router.post("/webhook")
@@ -103,7 +105,7 @@ async def handle_webhook(request: Request):
     chat_id = payload.senderData.chatId
     sender_name = payload.senderData.senderName or ""
 
-    logger.info(f"Incoming message from {sender_name} ({chat_id}): {text[:100]}")
+    logger.info(f"[{chat_id}] Incoming message from {sender_name}: {text[:100]}")
 
     # Обрабатываем асинхронно (не блокируем ответ на вебхук)
     asyncio.create_task(process_incoming_message(chat_id, sender_name, text))

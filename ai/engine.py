@@ -7,6 +7,7 @@ import asyncio
 import json
 import logging
 import re
+import time
 
 from openai import AsyncOpenAI
 
@@ -27,6 +28,7 @@ from db.conversations import (
 from gdrive.photo_mapper import find_product_photos, tokenize_text, select_photos_with_color_variety
 from inventory.stock_checker import check_product_availability, format_availability_message
 from greenapi.client import send_text, send_multiple_images
+from notifications import notify_error
 from config import (
     OPENAI_API_KEY,
     OPENAI_MODEL,
@@ -157,7 +159,8 @@ _GREETING_WORDS = ["здравствуйте", "привет", "добрый д�
 
 _ORDER_CONFIRM_TEXT = "Хорошо, оформляем заказ"
 _SIZE_REQUIRED_TYPES = {"shoes", "clothes"}
-_COLOR_REQUIREMENT_CACHE: dict[str, bool] = {}
+_COLOR_REQUIREMENT_CACHE: dict[str, tuple[bool, float]] = {}
+_COLOR_CACHE_TTL = 1800  # 30 minutes
 _ORDER_INTENT_PATTERNS = [
     "оформ", "заказ", "беру", "возьму", "покуп", "куплю", "зафикс", "адрес доставки",
 ]
@@ -428,6 +431,19 @@ def _sanitize_order_context(ctx: dict) -> dict:
 def _merge_order_context(base: dict, updates: dict) -> dict:
     merged = _sanitize_order_context(base)
     incoming = _sanitize_order_context(updates)
+
+    # Detect product switch — reset dependent fields
+    if incoming.get("product") and merged.get("product"):
+        old_tokens = tokenize_text(merged["product"])
+        new_tokens = tokenize_text(incoming["product"])
+        if old_tokens and new_tokens:
+            overlap = old_tokens & new_tokens
+            similarity = len(overlap) / max(len(old_tokens), len(new_tokens))
+            if similarity < 0.5:
+                merged["size"] = ""
+                merged["color"] = ""
+                merged["address"] = ""
+
     for key in ("city", "product", "size", "color", "address"):
         if incoming.get(key):
             merged[key] = incoming[key]
@@ -534,7 +550,7 @@ def _strip_checkout_prompts(text: str) -> str:
     kept = []
     for p in parts:
         low = p.lower()
-        if any(h in low for h in _CHECKOUT_HINTS) and len(p) <= 120:
+        if len(p) < 120 and any(h in low for h in _CHECKOUT_HINTS):
             continue
         kept.append(p)
     if not kept:
@@ -644,12 +660,12 @@ async def _extract_order_fields(user_message: str, history: list[dict], current_
         raw = completion.choices[0].message.content or "{}"
         parsed = json.loads(raw)
         return {
-            "city": parsed.get("city") or "",
-            "product": parsed.get("product") or "",
-            "product_type": parsed.get("product_type") or "",
-            "size": parsed.get("size") or "",
-            "color": parsed.get("color") or "",
-            "address": parsed.get("address") or "",
+            "city": str(parsed.get("city") or ""),
+            "product": str(parsed.get("product") or ""),
+            "product_type": str(parsed.get("product_type") or ""),
+            "size": str(parsed.get("size") or ""),
+            "color": str(parsed.get("color") or ""),
+            "address": str(parsed.get("address") or ""),
             "ready_to_order": bool(parsed.get("ready_to_order", False)),
         }
     except Exception as e:
@@ -746,14 +762,17 @@ async def _is_color_required(product_name: str) -> bool:
     product = (product_name or "").strip().lower()
     if not product:
         return False
-    if product in _COLOR_REQUIREMENT_CACHE:
-        return _COLOR_REQUIREMENT_CACHE[product]
+    cached = _COLOR_REQUIREMENT_CACHE.get(product)
+    if cached is not None:
+        value, ts = cached
+        if time.time() - ts < _COLOR_CACHE_TTL:
+            return value
     try:
         photos = await find_product_photos(product_name=product_name)
         colors = {_detect_color_from_filename(p.get("filename", "")) for p in photos}
         colors.discard("")
         required = len(colors) > 1
-        _COLOR_REQUIREMENT_CACHE[product] = required
+        _COLOR_REQUIREMENT_CACHE[product] = (required, time.time())
         return required
     except Exception as e:
         logger.warning(f"Failed to detect color requirement for '{product_name}': {e}")
@@ -963,8 +982,8 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
                 if not availability["available"]:
                     # Товара нет в наличии - не оформляем заказ
                     logger.info(
-                        "Товар '%s' (size=%s, color=%s) нет в наличии",
-                        product_name, size, color
+                        "[%s] Товар '%s' (size=%s, color=%s) нет в наличии",
+                        chat_id, product_name, size, color
                     )
                     assistant_text = format_availability_message(availability, product_name)
 
@@ -976,15 +995,15 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
                 else:
                     # Товар в наличии - можно оформлять заказ
                     logger.info(
-                        "Товар '%s' (size=%s, color=%s) в наличии: quantity=%d, price=%s",
-                        product_name, size, color,
+                        "[%s] Товар '%s' (size=%s, color=%s) в наличии: quantity=%d, price=%s",
+                        chat_id, product_name, size, color,
                         availability["quantity"], availability["price"]
                     )
                     availability_msg = format_availability_message(availability, product_name)
                     assistant_text = f"{availability_msg}|||{_ORDER_CONFIRM_TEXT}".strip("|")
 
             except Exception as e:
-                logger.error("Ошибка проверки наличия для '%s': %s", product_name, e, exc_info=True)
+                logger.error("[%s] Ошибка проверки наличия для '%s': %s", chat_id, product_name, e, exc_info=True)
                 # В случае ошибки все равно пытаемся оформить заказ
                 assistant_text = f"{assistant_text}|||{_ORDER_CONFIRM_TEXT}".strip("|")
         else:
@@ -1017,7 +1036,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
             if found_photos:
                 photos.extend(_pick_product_photos(found_photos, requested_color))
         except Exception as e:
-            logger.warning(f"Failed to find photos by message text: {e}")
+            logger.warning(f"[{chat_id}] Failed to find photos by message text: {e}")
 
     if (
         not photos
@@ -1033,7 +1052,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
             if found_photos:
                 photos.extend(_pick_product_photos(found_photos, requested_color))
         except Exception as e:
-            logger.warning(f"Failed to find photos by order context: {e}")
+            logger.warning(f"[{chat_id}] Failed to find photos by order context: {e}")
 
     # Fallback: search by RAG metadata (товары из базы знаний)
     # Пробуем все product_name из RAG, не только те что совпали с текущим сообщением —
@@ -1060,7 +1079,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
                     photos.extend(_pick_product_photos(folder_photos, requested_color))
                     break
             except Exception as e:
-                logger.warning(f"Failed to find photos for {product_name}: {e}")
+                logger.warning(f"[{chat_id}] Failed to find photos for {product_name}: {e}")
 
     # Stage 3: search by product mention in GPT response (not full text)
     if not photos and not is_answering_missing_field:
@@ -1071,7 +1090,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
                 if found_photos:
                     photos.extend(_pick_product_photos(found_photos, requested_color))
             except Exception as e:
-                logger.warning(f"Failed to find photos by GPT response product '{gpt_product}': {e}")
+                logger.warning(f"[{chat_id}] Failed to find photos by GPT response product '{gpt_product}': {e}")
 
     # Stage 4: если клиент просит фото ("покажите фотку"), а товар не в текущем сообщении —
     # ищем по последнему сообщению ассистента, где был описан товар (цена, модель)
@@ -1091,9 +1110,9 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
                 found_photos = await find_product_photos(product_name=last_product_text)
                 if found_photos:
                     photos.extend(_pick_product_photos(found_photos, requested_color))
-                    logger.info(f"Found {len(photos)} photos by last assistant product message")
+                    logger.info(f"[{chat_id}] Found {len(photos)} photos by last assistant product message")
             except Exception as e:
-                logger.warning(f"Failed to find photos by last assistant message: {e}")
+                logger.warning(f"[{chat_id}] Failed to find photos by last assistant message: {e}")
 
     if not photos and target_product_type:
         for q in _build_fallback_photo_queries(user_message, target_product_type):
@@ -1103,7 +1122,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
                     photos.extend(_pick_product_photos(found_photos, requested_color))
                     break
             except Exception as e:
-                logger.warning(f"Failed fallback photo query '{q}': {e}")
+                logger.warning(f"[{chat_id}] Failed fallback photo query '{q}': {e}")
 
     # Если клиент просит конкретный цвет, но этого цвета нет в фото активного товара,
     # не подменяем ответ описанием другого цвета.
@@ -1161,7 +1180,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
                         photos = alt_photos
                         break
                 except Exception as e:
-                    logger.warning(f"Failed to get color-alternative photos for '{alt}': {e}")
+                    logger.warning(f"[{chat_id}] Failed to get color-alternative photos for '{alt}': {e}")
 
     if target_product_type:
         photos = _filter_photos_by_requested_type(photos, target_product_type)
@@ -1175,7 +1194,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
                         if photos:
                             break
                 except Exception as e:
-                    logger.warning(f"Failed typed fallback photo query '{q}': {e}")
+                    logger.warning(f"[{chat_id}] Failed typed fallback photo query '{q}': {e}")
 
     if _is_photo_request(user_message) and not photos:
         product_label = order_ctx.get("product", "") or rag_product_name or "эту модель"
@@ -1233,7 +1252,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
                     photos = alt_photos
                     break
             except Exception as e:
-                logger.warning(f"Failed to get similar product photos for '{alt}': {e}")
+                logger.warning(f"[{chat_id}] Failed to get similar product photos for '{alt}': {e}")
 
     photos = _dedupe_photos(photos)
     photos = _normalize_photo_captions(photos)
@@ -1244,7 +1263,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
     await save_message(chat_id, "assistant", clean_text)
 
     if photos:
-        logger.info(f"Found {len(photos)} photos for chat {chat_id}")
+        logger.info(f"[{chat_id}] Found {len(photos)} photos")
 
     return {
         "text": assistant_text,
@@ -1287,9 +1306,11 @@ async def handle_message(chat_id: str, sender_name: str, text: str):
                     await send_text(chat_id, f"Хэнд-офф выключен для {target_chat_id}")
                     return
 
-        # If handoff enabled for this client, bot should not reply
+        # If handoff enabled for this client, save message but don't reply
         if await get_handoff_state(chat_id):
-            logger.info(f"Handoff enabled for {chat_id}; bot skipped reply.")
+            await save_message(chat_id, "user", text, sender_name)
+            await update_last_client_message(chat_id, text)
+            logger.info(f"[{chat_id}] Handoff enabled; saved message, bot skipped reply.")
             return
 
         result = await generate_response(chat_id, text, sender_name)
@@ -1338,12 +1359,13 @@ async def handle_message(chat_id: str, sender_name: str, text: str):
                     await asyncio.sleep(0.8)
 
     except Exception as e:
-        logger.error(f"Error handling message from {chat_id}: {e}", exc_info=True)
+        logger.error(f"[{chat_id}] Error handling message: {e}", exc_info=True)
+        await notify_error("handle_message", f"chat_id={chat_id} error={e}")
         try:
             await send_text(
                 chat_id,
                 "Извините, произошла небольшая ошибка. Наш менеджер скоро с вами свяжется!",
             )
         except Exception:
-            logger.error(f"Failed to send error fallback to {chat_id}", exc_info=True)
+            logger.error(f"[{chat_id}] Failed to send error fallback", exc_info=True)
 

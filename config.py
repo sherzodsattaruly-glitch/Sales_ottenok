@@ -66,6 +66,13 @@ GREEN_API_POLL_INTERVAL = float(os.getenv("GREEN_API_POLL_INTERVAL", "2.0"))
 INVENTORY_EXCEL_PATH = os.getenv("INVENTORY_EXCEL_PATH", "data/inventory.xlsx")
 INVENTORY_CACHE_TTL = int(os.getenv("INVENTORY_CACHE_TTL", "300"))  # 5 минут
 
+# Telegram alerts
+TELEGRAM_ALERT_BOT_TOKEN = os.getenv("TELEGRAM_ALERT_BOT_TOKEN", "")
+TELEGRAM_ALERT_CHAT_ID = os.getenv("TELEGRAM_ALERT_CHAT_ID", "")
+
 # Nudge Scheduler
 NUDGE_ENABLED = os.getenv("NUDGE_ENABLED", "1").lower() in ("1", "true", "yes")
 NUDGE_CHECK_INTERVAL_MINUTES = int(os.getenv("NUDGE_CHECK_INTERVAL_MINUTES", "5"))
+
+# Admin API
+ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "")

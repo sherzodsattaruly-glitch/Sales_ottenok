@@ -242,7 +242,7 @@ Option B (simpler): Use only `primary_product_match` or `rag_product_name` (alre
 ```
 priority: P1
 estimate: 1.5h
-status: pending
+status: done
 depends_on: none
 ```
 
@@ -309,7 +309,7 @@ def _merge_order_context(base: dict, updates: dict) -> dict:
 ```
 priority: P1
 estimate: 0.5h
-status: pending
+status: done
 depends_on: none
 ```
 
@@ -356,7 +356,7 @@ if await get_handoff_state(chat_id):
 ```
 priority: P2
 estimate: 1h
-status: pending
+status: done
 depends_on: TASK-1.2
 ```
 
@@ -404,7 +404,7 @@ def _strip_checkout_prompts(text: str) -> str:
 ```
 priority: P2
 estimate: 0.5h
-status: pending
+status: done
 depends_on: none
 ```
 
@@ -458,7 +458,7 @@ async def _is_color_required(product_name: str) -> bool:
 ```
 priority: P2
 estimate: 0.5h
-status: pending
+status: done
 depends_on: none
 ```
 
@@ -515,7 +515,7 @@ return {
 ```
 priority: P0
 estimate: 0.5h
-status: pending
+status: done
 depends_on: none
 ```
 
@@ -571,7 +571,7 @@ logging.basicConfig(
 ```
 priority: P1
 estimate: 2h
-status: pending
+status: done
 depends_on: none
 ```
 
@@ -602,7 +602,7 @@ Log messages from different client conversations interleave with no way to corre
 ```
 priority: P0
 estimate: 3h
-status: pending
+status: done
 depends_on: none
 ```
 
@@ -683,7 +683,7 @@ TELEGRAM_ALERT_CHAT_ID = os.getenv("TELEGRAM_ALERT_CHAT_ID", "")
 ```
 priority: P1
 estimate: 1.5h
-status: pending
+status: done
 depends_on: none
 ```
 
@@ -755,7 +755,7 @@ Add needed imports to `main.py`.
 ```
 priority: P1
 estimate: 3h
-status: pending
+status: done
 depends_on: none
 ```
 
