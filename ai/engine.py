@@ -1,6 +1,6 @@
-﻿"""
-AI-РѕСЂРєРµСЃС‚СЂР°С‚РѕСЂ: СЃРІСЏР·С‹РІР°РµС‚ RAG, GPT Рё Google Drive.
-Р“Р»Р°РІРЅР°СЏ С‚РѕС‡РєР° РѕР±СЂР°Р±РѕС‚РєРё СЃРѕРѕР±С‰РµРЅРёР№.
+"""
+AI-оркестратор: связывает RAG, GPT и Google Drive.
+Главная точка обработки сообщений.
 """
 
 import asyncio
@@ -159,10 +159,10 @@ _ORDER_CONFIRM_TEXT = "Хорошо, оформляем заказ"
 _SIZE_REQUIRED_TYPES = {"shoes", "clothes"}
 _COLOR_REQUIREMENT_CACHE: dict[str, bool] = {}
 _ORDER_INTENT_PATTERNS = [
-    "оформ", "заказ", "беру", "возьму", "покуп", "куплю", "зафикс", "адрес",
+    "оформ", "заказ", "беру", "возьму", "покуп", "куплю", "зафикс", "адрес доставки",
 ]
 _CHECKOUT_HINTS = [
-    "зафикс", "оформ", "адрес доставки", "напишите, пожалуйста, адрес", "куда отправ",
+    "зафикс", "оформить заказ", "оформляем заказ", "адрес доставки", "напишите, пожалуйста, адрес", "куда отправ",
 ]
 _FIELD_PROMPT_HINTS = {
     "city": ["город", "из какого", "откуда"],
@@ -245,6 +245,35 @@ def _extract_product_name_from_result(result: dict) -> str:
     candidate = re.sub(r"\s{2,}.*$", "", candidate).strip()
     candidate = candidate[:120]
     return candidate if _looks_like_product_name(candidate) else ""
+
+
+_BRAND_NAMES_EN = {
+    "chanel", "saint laurent", "ysl", "yves saint laurent",
+    "jimmy choo", "miu miu", "louis vuitton",
+    "gucci", "dior", "golden goose", "prada",
+    "balenciaga", "fendi", "versace", "dolce gabbana",
+    "bottega veneta", "celine", "loewe", "valentino",
+    "burberry", "hermes",
+}
+
+_BRAND_PATTERN = re.compile(
+    r"\b(" + "|".join(re.escape(b) for b in sorted(_BRAND_NAMES_EN, key=len, reverse=True)) + r")\b\s*([\w\-]+(?:\s+[\w\-]+){0,2})?",
+    re.IGNORECASE,
+)
+
+
+def _extract_product_mention(text: str) -> str:
+    """Extract first brand + model mention from text. Returns short product name or empty string."""
+    if not text:
+        return ""
+    m = _BRAND_PATTERN.search(text)
+    if not m:
+        return ""
+    brand = m.group(1).strip()
+    rest = (m.group(2) or "").strip()
+    if rest:
+        return f"{brand} {rest}"
+    return brand
 
 
 def _infer_result_product_type(result: dict) -> str:
@@ -505,7 +534,7 @@ def _strip_checkout_prompts(text: str) -> str:
     kept = []
     for p in parts:
         low = p.lower()
-        if any(h in low for h in _CHECKOUT_HINTS):
+        if any(h in low for h in _CHECKOUT_HINTS) and len(p) <= 120:
             continue
         kept.append(p)
     if not kept:
@@ -789,10 +818,10 @@ def _pick_product_photos(found_photos: list[dict], requested_color: str | None =
 
 async def generate_response(chat_id: str, user_message: str, sender_name: str) -> dict:
     """
-    Р“РµРЅРµСЂРёСЂСѓРµС‚ РѕС‚РІРµС‚ Р±РѕС‚Р°.
-    Р’РѕР·РІСЂР°С‰Р°РµС‚: {'text': str, 'photos': list[dict]}
+    Генерирует ответ бота.
+    Возвращает: {'text': str, 'photos': list[dict]}
     """
-    # 1. РЎРѕС…СЂР°РЅСЏРµРј РІС…РѕРґСЏС‰РµРµ СЃРѕРѕР±С‰РµРЅРёРµ
+    # 1. Сохраняем входящее сообщение
     await save_message(chat_id, "user", user_message, sender_name)
 
     # Сбрасываем дожим когда клиент отвечает
@@ -805,7 +834,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
     if _should_use_active_product_query(user_message, current_order_ctx.get("product", "")):
         product_query = current_order_ctx.get("product", "") or user_message
 
-    # 2. РџР°СЂР°Р»Р»РµР»СЊРЅРѕ РёС‰РµРј РІ Р±Р°Р·Рµ Р·РЅР°РЅРёР№
+    # 2. Параллельно ищем в базе знаний
     product_results, script_results = await asyncio.gather(
         search_products(product_query),
         search_scripts(user_message),
@@ -820,14 +849,14 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
     primary_product_match = _pick_primary_product_match(product_results, user_message)
     specific_query_tokens = _extract_specific_query_tokens(user_message)
 
-    # 3. РЎРѕР±РёСЂР°РµРј РєРѕРЅС‚РµРєСЃС‚С‹
+    # 3. Собираем контексты
     product_context = "\n---\n".join([r["text"] for r in product_results])
-    product_context = product_context or "РќРµС‚ СЂРµР»РµРІР°РЅС‚РЅС‹С… С‚РѕРІР°СЂРѕРІ РІ Р±Р°Р·Рµ."
+    product_context = product_context or "Нет релевантных товаров в базе."
 
     sales_context = "\n---\n".join([r["text"] for r in script_results])
-    sales_context = sales_context or "РќРµС‚ СЂРµР»РµРІР°РЅС‚РЅС‹С… СЃРєСЂРёРїС‚РѕРІ."
+    sales_context = sales_context or "Нет релевантных скриптов."
 
-    # 4. РСЃС‚РѕСЂРёСЏ РїРµСЂРµРїРёСЃРєРё
+    # 4. История переписки
     history = await get_conversation_history(chat_id)
     is_new_client = len(history) <= 1
     history_text = "\n".join(
@@ -858,6 +887,10 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
     if target_product_type:
         extracted_fields["product_type"] = target_product_type
 
+    # Before merge — capture what WAS missing (for is_answering_missing_field check later)
+    color_required_pre = await _is_color_required(order_ctx.get("product", ""))
+    pre_merge_missing = _build_missing_fields(order_ctx, color_required_pre)
+
     order_ctx = _merge_order_context(order_ctx, extracted_fields)
     if not order_ctx.get("product") and rag_product_name:
         order_ctx["product"] = rag_product_name
@@ -875,7 +908,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
         conversation_history=history_text,
     ) + "\n\n" + order_guard_prompt
 
-    # 6. Р’С‹Р·С‹РІР°РµРј GPT
+    # 6. Вызываем GPT
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_message},
@@ -960,7 +993,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
 
     assistant_text = _dedupe_response_parts(assistant_text)
 
-    # 8. РС‰РµРј С„РѕС‚Рѕ С‚РѕРІР°СЂРѕРІ РёР· Google Drive
+    # 8. Ищем фото товаров из Google Drive
     photos = []
     user_tokens = tokenize_text(user_message)
 
@@ -969,10 +1002,10 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
 
     # Проверяем, отвечает ли клиент на вопрос о недостающих полях
     # Если да - не отправляем фото заново
+    # Используем pre_merge_missing (до слияния), т.к. после merge поле уже не "missing"
     is_answering_missing_field = False
-    if missing_order_fields and extracted_fields:
-        # Проверяем был ли извлечен один из недостающих полей
-        for field in missing_order_fields:
+    if pre_merge_missing and extracted_fields:
+        for field in pre_merge_missing:
             if extracted_fields.get(field):
                 is_answering_missing_field = True
                 break
@@ -1029,14 +1062,16 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
             except Exception as e:
                 logger.warning(f"Failed to find photos for {product_name}: {e}")
 
-    # Stage 3: search by GPT response text (модель могла назвать товар в ответе)
+    # Stage 3: search by product mention in GPT response (not full text)
     if not photos and not is_answering_missing_field:
-        try:
-            found_photos = await find_product_photos(product_name=assistant_text)
-            if found_photos:
-                photos.extend(_pick_product_photos(found_photos, requested_color))
-        except Exception as e:
-            logger.warning(f"Failed to find photos by GPT response: {e}")
+        gpt_product = _extract_product_mention(assistant_text)
+        if gpt_product:
+            try:
+                found_photos = await find_product_photos(product_name=gpt_product)
+                if found_photos:
+                    photos.extend(_pick_product_photos(found_photos, requested_color))
+            except Exception as e:
+                logger.warning(f"Failed to find photos by GPT response product '{gpt_product}': {e}")
 
     # Stage 4: если клиент просит фото ("покажите фотку"), а товар не в текущем сообщении —
     # ищем по последнему сообщению ассистента, где был описан товар (цена, модель)
@@ -1222,8 +1257,8 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
 
 async def handle_message(chat_id: str, sender_name: str, text: str):
     """
-    РћСЃРЅРѕРІРЅРѕР№ РѕР±СЂР°Р±РѕС‚С‡РёРє СЃРѕРѕР±С‰РµРЅРёР№ (РІС‹Р·С‹РІР°РµС‚СЃСЏ РёР· webhook).
-    Р“РµРЅРµСЂРёСЂСѓРµС‚ РѕС‚РІРµС‚ Рё РѕС‚РїСЂР°РІР»СЏРµС‚ С‡РµСЂРµР· Green API.
+    Основной обработчик сообщений (вызывается из webhook).
+    Генерирует ответ и отправляет через Green API.
     """
     try:
         # Manager handoff commands (sent from manager's number to bot)
@@ -1307,7 +1342,7 @@ async def handle_message(chat_id: str, sender_name: str, text: str):
         try:
             await send_text(
                 chat_id,
-                "РР·РІРёРЅРёС‚Рµ, РїСЂРѕРёР·РѕС€Р»Р° РЅРµР±РѕР»СЊС€Р°СЏ РѕС€РёР±РєР°. РќР°С€ РјРµРЅРµРґР¶РµСЂ СЃРєРѕСЂРѕ СЃ РІР°РјРё СЃРІСЏР¶РµС‚СЃСЏ!",
+                "Извините, произошла небольшая ошибка. Наш менеджер скоро с вами свяжется!",
             )
         except Exception:
             logger.error(f"Failed to send error fallback to {chat_id}", exc_info=True)

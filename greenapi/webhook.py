@@ -17,6 +17,9 @@ router = APIRouter()
 # Эта функция будет заменена на AI engine после реализации
 _message_handler = None
 
+# Per-chat lock to prevent concurrent processing of messages from the same client
+_chat_locks: dict[str, asyncio.Lock] = {}
+
 
 def set_message_handler(handler):
     """Установить обработчик входящих сообщений (вызывается из main.py)."""
@@ -31,15 +34,18 @@ async def _default_echo_handler(chat_id: str, sender_name: str, text: str):
 
 async def process_incoming_message(chat_id: str, sender_name: str, text: str):
     """Обработка входящего сообщения в фоновой задаче."""
-    handler = _message_handler or _default_echo_handler
-    try:
-        await handler(chat_id, sender_name, text)
-    except Exception as e:
-        logger.error(f"Error processing message from {chat_id}: {e}", exc_info=True)
+    if chat_id not in _chat_locks:
+        _chat_locks[chat_id] = asyncio.Lock()
+    async with _chat_locks[chat_id]:
+        handler = _message_handler or _default_echo_handler
         try:
-            await send_text(chat_id, "Извините, произошла ошибка. Наш менеджер скоро с вами свяжется!")
-        except Exception:
-            logger.error(f"Failed to send error message to {chat_id}", exc_info=True)
+            await handler(chat_id, sender_name, text)
+        except Exception as e:
+            logger.error(f"Error processing message from {chat_id}: {e}", exc_info=True)
+            try:
+                await send_text(chat_id, "Извините, произошла ошибка. Наш менеджер скоро с вами свяжется!")
+            except Exception:
+                logger.error(f"Failed to send error message to {chat_id}", exc_info=True)
 
 
 @router.post("/webhook")
