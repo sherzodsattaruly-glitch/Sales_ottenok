@@ -1,0 +1,20 @@
+[Unit]
+Description=Sales Ottenok WhatsApp Bot
+After=network.target
+
+[Service]
+Type=simple
+User=ottenok
+Group=ottenok
+WorkingDirectory=/opt/sales_ottenok
+Environment="PATH=/opt/sales_ottenok/.venv/bin"
+ExecStart=/opt/sales_ottenok/.venv/bin/python main.py
+Restart=always
+RestartSec=10
+
+# Логирование
+StandardOutput=append:/var/log/sales_ottenok/stdout.log
+StandardError=append:/var/log/sales_ottenok/stderr.log
+
+[Install]
+WantedBy=multi-user.target
