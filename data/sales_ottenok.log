@@ -5176,3 +5176,604 @@ TypeError: can only concatenate str (not "datetime.timedelta") to str
 2026-02-15 00:45:17,124 - scheduler.nudge_scheduler - INFO - Найдено 2 клиентов для проверки
 2026-02-15 00:45:17,125 - apscheduler.executors.default - INFO - Job "Check and send nudges (trigger: interval[0:05:00], next run at: 2026-02-15 00:50:17 +05)" executed successfully
 2026-02-15 00:45:23,419 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:45:31,441 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:45:39,305 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:45:47,186 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:45:55,081 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:46:03,056 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:46:10,980 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:46:18,886 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:46:26,925 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:46:34,798 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:46:42,729 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:46:50,675 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:46:58,535 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:47:06,445 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:47:14,368 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:47:22,270 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:47:30,193 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:47:38,166 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:47:47,132 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:47:55,028 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:48:02,919 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:48:10,894 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:48:18,752 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:48:26,680 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:48:34,635 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:48:42,493 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:48:50,443 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:48:58,281 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:49:06,283 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:49:14,186 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:49:22,203 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:49:30,189 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:49:38,081 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:49:46,003 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:49:53,841 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:50:01,806 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:50:09,690 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:50:17,119 - apscheduler.executors.default - INFO - Running job "Check and send nudges (trigger: interval[0:05:00], next run at: 2026-02-15 00:55:17 +05)" (scheduled at 2026-02-15 00:50:17.114922+05:00)
+2026-02-15 00:50:17,123 - scheduler.nudge_scheduler - INFO - Найдено 2 клиентов для проверки
+2026-02-15 00:50:17,123 - apscheduler.executors.default - INFO - Job "Check and send nudges (trigger: interval[0:05:00], next run at: 2026-02-15 00:55:17 +05)" executed successfully
+2026-02-15 00:50:17,606 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:50:25,553 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:50:33,461 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:50:41,332 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:50:49,201 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:50:57,252 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:51:05,166 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:51:13,126 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:51:21,002 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:51:28,930 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:51:36,839 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:51:44,766 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:51:52,720 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:52:00,605 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:52:08,529 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:52:16,467 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:52:24,378 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:52:32,329 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:52:40,258 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:52:48,203 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:52:56,051 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:53:03,942 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:53:11,805 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:53:19,680 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:53:27,519 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:53:36,437 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:53:44,354 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:53:52,279 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:54:00,167 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:54:08,129 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:54:14,005 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:54:14,005 - greenapi.poller - INFO - [poll] Incoming message from Шер (77006266995@c.us): Здравствуйте
+2026-02-15 00:54:15,046 - catalog.sheets_loader - INFO - Загружаем catalog из Google Sheets 13jPysMCvaSGJPV3ejWJVa8rpZDD2HxPEPRxSIUbst78
+2026-02-15 00:54:15,082 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2026-02-15 00:54:18,281 - gdrive.sheets_client - INFO - Found headers: ['name', 'category', 'price', 'colors', 'descriptions']
+2026-02-15 00:54:18,282 - gdrive.sheets_client - INFO - Loaded 16 products from Google Sheets
+2026-02-15 00:54:18,282 - catalog.sheets_loader - INFO - Загружено 16 товаров из Google Sheets
+2026-02-15 00:54:19,484 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-02-15 00:54:21,166 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 00:54:21,171 - gdrive.photo_mapper - INFO - Photo match by tokens {'super', 'golden', 'гус', 'суперстар', 'голден', 'star', 'goose'}: 2 photos, best score=4, min_score=2
+2026-02-15 00:54:24,236 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 00:54:24,238 - gdrive.photo_mapper - INFO - No photos found for folder_id=None, product_name=Здравствуйте
+2026-02-15 00:54:24,239 - gdrive.photo_mapper - INFO - Photo match by tokens {'super', 'golden', 'гус', 'суперстар', 'голден', 'star', 'goose'}: 2 photos, best score=4, min_score=2
+2026-02-15 00:54:24,249 - ai.engine - INFO - [77006266995@c.us] Found 2 photos
+2026-02-15 00:54:25,104 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendMessage/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:54:25,104 - greenapi.client - INFO - Sent text to 77006266995@c.us: Мы — бутик "Ottenok" в Алматы, предлагающий женску...
+2026-02-15 00:54:25,948 - httpx - INFO - HTTP Request: DELETE https://api.green-api.com/waInstance7103508280/deleteNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982/1 "HTTP/1.1 200 OK"
+2026-02-15 00:54:31,789 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:54:37,728 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:54:37,729 - greenapi.poller - INFO - [poll] Incoming message from Шер (77006266995@c.us): Какие сумки у вас есть
+2026-02-15 00:54:37,771 - ai.engine - INFO - [77006266995@c.us] Category browsing detected, clearing product from order context
+2026-02-15 00:54:38,899 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-02-15 00:54:39,951 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 00:54:40,824 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 00:54:40,829 - gdrive.photo_mapper - INFO - Photo match by tokens {'сумки', 'сумка'}: 9 photos, best score=1, min_score=1
+2026-02-15 00:54:40,881 - ai.engine - INFO - [77006266995@c.us] Found 5 photos
+2026-02-15 00:54:41,815 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendMessage/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:54:41,816 - greenapi.client - INFO - Sent text to 77006266995@c.us: Сейчас покажу какие есть. 😊...
+2026-02-15 00:54:44,122 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:54:44,122 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: сумка Miu Miu Arcadie 2.jpg
+2026-02-15 00:54:46,505 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:54:46,505 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: сумка Louis Vuitton Pochette Félicie.jpg
+2026-02-15 00:54:48,805 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:54:48,805 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: Сумка черная Yves Saint Laurent Monogram.jpg
+2026-02-15 00:54:51,364 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:54:51,365 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: Сумка черная Chanel Jumbo Classic Flap 2.jpg
+2026-02-15 00:54:54,105 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:54:54,105 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: Сумка черная Chanel 25 3.jpg
+2026-02-15 00:54:55,701 - httpx - INFO - HTTP Request: DELETE https://api.green-api.com/waInstance7103508280/deleteNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982/2 "HTTP/1.1 200 OK"
+2026-02-15 00:55:01,557 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:55:09,458 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:55:17,121 - apscheduler.executors.default - INFO - Running job "Check and send nudges (trigger: interval[0:05:00], next run at: 2026-02-15 01:00:17 +05)" (scheduled at 2026-02-15 00:55:17.114922+05:00)
+2026-02-15 00:55:17,125 - scheduler.nudge_scheduler - INFO - Найдено 2 клиентов для проверки
+2026-02-15 00:55:17,125 - apscheduler.executors.default - INFO - Job "Check and send nudges (trigger: interval[0:05:00], next run at: 2026-02-15 01:00:17 +05)" executed successfully
+2026-02-15 00:55:17,323 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:55:21,128 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:55:21,171 - greenapi.poller - INFO - [poll] Skipped message of type quotedMessage (no text/caption)
+2026-02-15 00:55:21,980 - httpx - INFO - HTTP Request: DELETE https://api.green-api.com/waInstance7103508280/deleteNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982/3 "HTTP/1.1 200 OK"
+2026-02-15 00:55:27,804 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:55:35,651 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:55:43,466 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:55:51,350 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:55:59,264 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:56:07,166 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:56:15,024 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:56:23,922 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:56:31,779 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:56:39,660 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:56:47,536 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:56:55,405 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:57:03,330 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:57:11,155 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:57:18,998 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:57:26,851 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:57:34,742 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:57:42,705 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:57:50,582 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:57:58,414 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:58:06,277 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:58:14,115 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:58:21,955 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:58:29,894 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:58:37,843 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:58:45,734 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:58:53,804 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:59:01,701 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:59:09,646 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:59:17,561 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:59:25,433 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:59:33,319 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:59:41,173 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:59:49,095 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 00:59:57,021 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:00:04,924 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:02:09,866 - main - INFO - Запуск бота Sales Ottenok...
+2026-02-15 01:02:09,888 - gdrive.photo_mapper - INFO - Loaded photo index: 1 products
+2026-02-15 01:02:09,889 - main - INFO - Green API polling enabled.
+2026-02-15 01:02:09,889 - scheduler.nudge_scheduler - INFO - Запуск nudge scheduler...
+2026-02-15 01:02:09,905 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-02-15 01:02:09,929 - apscheduler.scheduler - INFO - Added job "Check and send nudges" to job store "default"
+2026-02-15 01:02:09,929 - apscheduler.scheduler - INFO - Scheduler started
+2026-02-15 01:02:09,929 - scheduler.nudge_scheduler - INFO - Nudge scheduler запущен (проверка каждые 5 минут)
+2026-02-15 01:02:09,929 - main - INFO - Nudge scheduler started.
+2026-02-15 01:02:09,929 - main - INFO - Бот готов к работе!
+2026-02-15 01:02:15,798 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:02:23,691 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:02:31,545 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:02:39,416 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:02:47,276 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:02:55,222 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:03:03,143 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:03:11,060 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:03:18,958 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:03:21,776 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:03:21,777 - greenapi.poller - INFO - [poll] Incoming message from Шер (77006266995@c.us): Здравствуйте
+2026-02-15 01:03:21,842 - catalog.sheets_loader - INFO - Загружаем catalog из Google Sheets 13jPysMCvaSGJPV3ejWJVa8rpZDD2HxPEPRxSIUbst78
+2026-02-15 01:03:21,849 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2026-02-15 01:03:24,956 - gdrive.sheets_client - INFO - Found headers: ['name', 'category', 'price', 'colors', 'descriptions']
+2026-02-15 01:03:24,957 - gdrive.sheets_client - INFO - Loaded 16 products from Google Sheets
+2026-02-15 01:03:24,957 - catalog.sheets_loader - INFO - Загружено 16 товаров из Google Sheets
+2026-02-15 01:03:26,250 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-02-15 01:03:26,364 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event CollectionQueryEvent: capture() takes 1 positional argument but 3 were given
+2026-02-15 01:03:27,319 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:03:28,341 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:03:28,350 - gdrive.photo_mapper - INFO - No photos found for folder_id=None, product_name=Здравствуйте
+2026-02-15 01:03:29,366 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendMessage/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:03:29,367 - greenapi.client - INFO - Sent text to 77006266995@c.us: Мы — бутик "Ottenok" в Алматы, предлагающий женску...
+2026-02-15 01:03:30,260 - httpx - INFO - HTTP Request: DELETE https://api.green-api.com/waInstance7103508280/deleteNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982/1 "HTTP/1.1 200 OK"
+2026-02-15 01:03:35,078 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:03:35,078 - greenapi.poller - INFO - [poll] Incoming message from Шер (77006266995@c.us): Какие сумки у вас есть
+2026-02-15 01:03:35,579 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-02-15 01:03:36,549 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:03:38,105 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:03:38,105 - gdrive.photo_mapper - INFO - Photo match by tokens {'сумки', 'сумка'}: 9 photos, best score=1, min_score=1
+2026-02-15 01:03:38,125 - ai.engine - INFO - [77006266995@c.us] Found 5 photos
+2026-02-15 01:03:39,023 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendMessage/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:03:39,023 - greenapi.client - INFO - Sent text to 77006266995@c.us: Сейчас покажу какие есть. 😊...
+2026-02-15 01:03:40,674 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendMessage/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:03:40,675 - greenapi.client - INFO - Sent text to 77006266995@c.us: Какую модель хотите рассмотреть поближе? 😊...
+2026-02-15 01:03:42,270 - httpx - INFO - HTTP Request: DELETE https://api.green-api.com/waInstance7103508280/deleteNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982/2 "HTTP/1.1 200 OK"
+2026-02-15 01:03:48,085 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:03:55,958 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:03:59,788 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:03:59,789 - greenapi.poller - INFO - [poll] Incoming message from Шер (77006266995@c.us): Какие сумки у вас есть?
+2026-02-15 01:04:00,305 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-02-15 01:04:01,072 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:04:02,060 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:04:02,066 - gdrive.photo_mapper - INFO - Photo match by tokens {'сумки', 'сумка'}: 9 photos, best score=1, min_score=1
+2026-02-15 01:04:02,096 - ai.engine - INFO - [77006266995@c.us] Found 5 photos
+2026-02-15 01:04:02,947 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendMessage/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:04:02,947 - greenapi.client - INFO - Sent text to 77006266995@c.us: Сейчас покажу какие есть. 😊 Какую модель хотите ра...
+2026-02-15 01:04:03,805 - httpx - INFO - HTTP Request: DELETE https://api.green-api.com/waInstance7103508280/deleteNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982/3 "HTTP/1.1 200 OK"
+2026-02-15 01:04:09,676 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:04:12,587 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:04:12,588 - greenapi.poller - INFO - [poll] Incoming message from Шер (77006266995@c.us): Эту
+2026-02-15 01:04:13,021 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-02-15 01:04:13,988 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:04:14,001 - gdrive.photo_mapper - INFO - Photo match by tokens {'товар', 'classic', 'slingbacks', 'chanel'}: 3 photos, best score=3, min_score=2
+2026-02-15 01:04:14,685 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:04:14,690 - gdrive.photo_mapper - INFO - No photos found for folder_id=None, product_name=Эту
+2026-02-15 01:04:15,786 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendMessage/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:04:15,787 - greenapi.client - INFO - Sent text to 77006266995@c.us: Какой размер вам нужен? 😊...
+2026-02-15 01:04:16,628 - httpx - INFO - HTTP Request: DELETE https://api.green-api.com/waInstance7103508280/deleteNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982/4 "HTTP/1.1 200 OK"
+2026-02-15 01:04:22,452 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:04:29,306 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:04:29,306 - greenapi.poller - INFO - [poll] Incoming message from Шер (77006266995@c.us): А они разве не стандартные?
+2026-02-15 01:04:29,867 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-02-15 01:04:31,530 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:04:31,561 - gdrive.photo_mapper - INFO - Photo match by tokens {'classic', 'slingbacks', 'chanel'}: 3 photos, best score=3, min_score=2
+2026-02-15 01:04:32,425 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:04:32,432 - gdrive.photo_mapper - INFO - No photos found for folder_id=None, product_name=А они разве не стандартные?
+2026-02-15 01:04:32,433 - gdrive.photo_mapper - INFO - Photo match by tokens {'classic', 'slingbacks', 'chanel'}: 3 photos, best score=3, min_score=2
+2026-02-15 01:04:32,469 - ai.engine - INFO - [77006266995@c.us] Found 3 photos
+2026-02-15 01:04:32,477 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2026-02-15 01:04:35,890 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:04:35,891 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: туфли Chanel Classic Slingbacks 3.jpg
+2026-02-15 01:04:38,038 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:04:38,039 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: туфли Chanel Classic Slingbacks 2.jpg
+2026-02-15 01:04:40,230 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:04:40,230 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: туфли Chanel Classic Slingbacks 1.jpg
+2026-02-15 01:04:43,401 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendMessage/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:04:43,402 - greenapi.client - INFO - Sent text to 77006266995@c.us: Chanel Classic Slingbacks идут размер в размер. 😊 ...
+2026-02-15 01:04:44,309 - httpx - INFO - HTTP Request: DELETE https://api.green-api.com/waInstance7103508280/deleteNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982/5 "HTTP/1.1 200 OK"
+2026-02-15 01:04:50,123 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:04:57,975 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:05:05,913 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:05:13,792 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:05:21,673 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:05:29,540 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:05:37,816 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:05:45,689 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:05:53,575 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:06:01,475 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:06:09,279 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:06:18,138 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:06:26,055 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:06:33,989 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:06:42,871 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:06:50,699 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:06:59,505 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:07:07,437 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:07:09,928 - apscheduler.executors.default - INFO - Running job "Check and send nudges (trigger: interval[0:05:00], next run at: 2026-02-15 01:12:09 +05)" (scheduled at 2026-02-15 01:07:09.905856+05:00)
+2026-02-15 01:07:09,930 - scheduler.nudge_scheduler - INFO - Найдено 2 клиентов для проверки
+2026-02-15 01:07:09,930 - apscheduler.executors.default - INFO - Job "Check and send nudges (trigger: interval[0:05:00], next run at: 2026-02-15 01:12:09 +05)" executed successfully
+2026-02-15 01:07:15,301 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:07:23,480 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:07:31,704 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:07:39,905 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:07:48,069 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:07:56,272 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:08:04,497 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:08:12,883 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:08:21,118 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:08:29,408 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:08:37,757 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:08:45,956 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:08:54,258 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:09:02,566 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:09:10,941 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:09:19,167 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:09:27,541 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:09:35,733 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:09:44,109 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:09:52,474 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:10:00,759 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:10:09,155 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:10:17,433 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:10:25,682 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:10:34,006 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:10:54,240 - main - INFO - Запуск бота Sales Ottenok...
+2026-02-15 01:10:54,245 - gdrive.photo_mapper - INFO - Loaded photo index: 1 products
+2026-02-15 01:10:54,245 - main - INFO - Green API polling enabled.
+2026-02-15 01:10:54,245 - scheduler.nudge_scheduler - INFO - Запуск nudge scheduler...
+2026-02-15 01:10:54,252 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-02-15 01:10:54,255 - apscheduler.scheduler - INFO - Added job "Check and send nudges" to job store "default"
+2026-02-15 01:10:54,255 - apscheduler.scheduler - INFO - Scheduler started
+2026-02-15 01:10:54,255 - scheduler.nudge_scheduler - INFO - Nudge scheduler запущен (проверка каждые 5 минут)
+2026-02-15 01:10:54,255 - main - INFO - Nudge scheduler started.
+2026-02-15 01:10:54,255 - main - INFO - Бот готов к работе!
+2026-02-15 01:11:00,799 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:11:09,178 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:11:17,386 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:11:19,009 - main - INFO - Запуск бота Sales Ottenok...
+2026-02-15 01:11:19,017 - gdrive.photo_mapper - INFO - Loaded photo index: 1 products
+2026-02-15 01:11:19,018 - main - INFO - Green API polling enabled.
+2026-02-15 01:11:19,018 - scheduler.nudge_scheduler - INFO - Запуск nudge scheduler...
+2026-02-15 01:11:19,026 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-02-15 01:11:19,029 - apscheduler.scheduler - INFO - Added job "Check and send nudges" to job store "default"
+2026-02-15 01:11:19,029 - apscheduler.scheduler - INFO - Scheduler started
+2026-02-15 01:11:19,030 - scheduler.nudge_scheduler - INFO - Nudge scheduler запущен (проверка каждые 5 минут)
+2026-02-15 01:11:19,030 - main - INFO - Nudge scheduler started.
+2026-02-15 01:11:19,030 - main - INFO - Бот готов к работе!
+2026-02-15 01:11:20,001 - scheduler.nudge_scheduler - INFO - Остановка nudge scheduler...
+2026-02-15 01:11:20,002 - scheduler.nudge_scheduler - INFO - Nudge scheduler остановлен
+2026-02-15 01:11:20,002 - main - INFO - Nudge scheduler stopped.
+2026-02-15 01:11:20,002 - main - INFO - Бот остановлен.
+2026-02-15 01:11:20,006 - apscheduler.scheduler - INFO - Scheduler has been shut down
+2026-02-15 01:11:25,647 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:11:33,923 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:11:42,093 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:11:50,086 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:11:58,155 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:12:06,409 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:12:14,279 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:12:20,146 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:12:20,147 - greenapi.poller - INFO - [poll] Incoming message from Шер (77006266995@c.us): Какие кроссовки у вас есть?
+2026-02-15 01:12:20,166 - ai.engine - INFO - [77006266995@c.us] Category browsing detected, clearing product from order context
+2026-02-15 01:12:20,180 - catalog.sheets_loader - INFO - Загружаем catalog из Google Sheets 13jPysMCvaSGJPV3ejWJVa8rpZDD2HxPEPRxSIUbst78
+2026-02-15 01:12:20,188 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2026-02-15 01:12:23,410 - gdrive.sheets_client - INFO - Found headers: ['name', 'category', 'price', 'colors', 'descriptions']
+2026-02-15 01:12:23,410 - gdrive.sheets_client - INFO - Loaded 16 products from Google Sheets
+2026-02-15 01:12:23,410 - catalog.sheets_loader - INFO - Загружено 16 товаров из Google Sheets
+2026-02-15 01:12:25,381 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-02-15 01:12:25,498 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event CollectionQueryEvent: capture() takes 1 positional argument but 3 were given
+2026-02-15 01:12:26,544 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:12:27,778 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:12:27,782 - gdrive.photo_mapper - INFO - Photo match by tokens {'кроссовки'}: 5 photos, best score=1, min_score=1
+2026-02-15 01:12:27,795 - ai.engine - INFO - [77006266995@c.us] Found 4 photos
+2026-02-15 01:12:28,686 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendMessage/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:12:28,687 - greenapi.client - INFO - Sent text to 77006266995@c.us: Сейчас покажу какие есть. 😊...
+2026-02-15 01:12:28,691 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2026-02-15 01:12:33,929 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:12:33,929 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: кроссовки розовые Golden Goose Star (Custom Co-Creation).jpg
+2026-02-15 01:12:36,767 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:12:36,768 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: кроссовки черные Golden Goose Ball Star 2.jpg
+2026-02-15 01:12:39,405 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:12:39,405 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: кроссовки белые Golden Goose Super-Star.jpg
+2026-02-15 01:12:42,073 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:12:42,074 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: кроссовки Golden Goose Super-Star Custom.jpg
+2026-02-15 01:12:44,318 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendMessage/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:12:44,318 - greenapi.client - INFO - Sent text to 77006266995@c.us: Какую модель хотите рассмотреть поближе? 😊...
+2026-02-15 01:12:45,205 - httpx - INFO - HTTP Request: DELETE https://api.green-api.com/waInstance7103508280/deleteNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982/1 "HTTP/1.1 200 OK"
+2026-02-15 01:12:51,100 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:12:57,266 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:12:57,268 - greenapi.poller - INFO - [poll] Incoming message from Шер (77006266995@c.us): Давайте эту
+2026-02-15 01:12:58,871 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-02-15 01:12:59,730 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:12:59,750 - gdrive.photo_mapper - INFO - Photo match by tokens {'товар', 'slingbacks', 'classic', 'chanel'}: 3 photos, best score=3, min_score=2
+2026-02-15 01:13:01,166 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:13:01,172 - gdrive.photo_mapper - INFO - No photos found for folder_id=None, product_name=Давайте эту
+2026-02-15 01:13:02,032 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendMessage/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:13:02,033 - greenapi.client - INFO - Sent text to 77006266995@c.us: Какой размер вам нужен? 😊...
+2026-02-15 01:13:02,923 - httpx - INFO - HTTP Request: DELETE https://api.green-api.com/waInstance7103508280/deleteNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982/2 "HTTP/1.1 200 OK"
+2026-02-15 01:13:08,825 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:13:15,705 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:13:15,705 - greenapi.poller - INFO - [poll] Incoming message from Шер (77006266995@c.us): Можете рассказать об этих кроссовках?
+2026-02-15 01:13:16,162 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-02-15 01:13:17,465 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:13:17,484 - gdrive.photo_mapper - INFO - Photo match by tokens {'chanel', 'slingbacks', 'classic'}: 3 photos, best score=3, min_score=2
+2026-02-15 01:13:19,204 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:13:19,206 - gdrive.photo_mapper - INFO - No photos found for folder_id=None, product_name=Можете рассказать об этих кроссовках?
+2026-02-15 01:13:19,206 - gdrive.photo_mapper - INFO - Photo match by tokens {'chanel', 'slingbacks', 'classic'}: 3 photos, best score=3, min_score=2
+2026-02-15 01:13:19,227 - ai.engine - INFO - [77006266995@c.us] Found 3 photos
+2026-02-15 01:13:20,185 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendMessage/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:13:20,185 - greenapi.client - INFO - Sent text to 77006266995@c.us: Chanel Classic Slingbacks — модель, где качество в...
+2026-02-15 01:13:22,175 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:13:22,176 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: туфли Chanel Classic Slingbacks 3.jpg
+2026-02-15 01:13:24,292 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:13:24,293 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: туфли Chanel Classic Slingbacks 2.jpg
+2026-02-15 01:13:26,573 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:13:26,574 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: туфли Chanel Classic Slingbacks 1.jpg
+2026-02-15 01:13:28,750 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendMessage/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:13:28,751 - greenapi.client - INFO - Sent text to 77006266995@c.us: Какой размер вам нужен?...
+2026-02-15 01:13:29,645 - httpx - INFO - HTTP Request: DELETE https://api.green-api.com/waInstance7103508280/deleteNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982/3 "HTTP/1.1 200 OK"
+2026-02-15 01:13:35,528 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:13:43,385 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:13:51,249 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:14:00,137 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:14:08,994 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:14:16,836 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:14:24,747 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:14:32,636 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:14:40,518 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:14:48,393 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:14:56,255 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:15:04,112 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:15:12,984 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:15:20,871 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:15:28,768 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:15:36,630 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:15:44,505 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:15:52,405 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:15:54,266 - apscheduler.executors.default - INFO - Running job "Check and send nudges (trigger: interval[0:05:00], next run at: 2026-02-15 01:20:54 +05)" (scheduled at 2026-02-15 01:15:54.251504+05:00)
+2026-02-15 01:15:54,271 - scheduler.nudge_scheduler - INFO - Найдено 2 клиентов для проверки
+2026-02-15 01:15:54,271 - apscheduler.executors.default - INFO - Job "Check and send nudges (trigger: interval[0:05:00], next run at: 2026-02-15 01:20:54 +05)" executed successfully
+2026-02-15 01:16:00,601 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:16:08,439 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:16:16,367 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:16:24,252 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:16:32,571 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:16:40,743 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:16:48,897 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:16:57,052 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:17:05,262 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:17:13,357 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:17:21,422 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:17:29,701 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:17:38,052 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:17:46,477 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:17:54,593 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:18:02,884 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:18:11,207 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:18:19,449 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:18:27,767 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:18:36,020 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:18:44,244 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:18:52,488 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:19:00,802 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:19:08,959 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:19:17,107 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:19:25,283 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:19:45,652 - main - INFO - Запуск бота Sales Ottenok...
+2026-02-15 01:19:45,662 - gdrive.photo_mapper - INFO - Loaded photo index: 1 products
+2026-02-15 01:19:45,663 - main - INFO - Green API polling enabled.
+2026-02-15 01:19:45,663 - scheduler.nudge_scheduler - INFO - Запуск nudge scheduler...
+2026-02-15 01:19:45,678 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-02-15 01:19:45,684 - apscheduler.scheduler - INFO - Added job "Check and send nudges" to job store "default"
+2026-02-15 01:19:45,684 - apscheduler.scheduler - INFO - Scheduler started
+2026-02-15 01:19:45,685 - scheduler.nudge_scheduler - INFO - Nudge scheduler запущен (проверка каждые 5 минут)
+2026-02-15 01:19:45,686 - main - INFO - Nudge scheduler started.
+2026-02-15 01:19:45,686 - main - INFO - Бот готов к работе!
+2026-02-15 01:19:51,949 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:20:00,184 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:20:09,473 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:20:17,500 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:20:25,476 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:20:33,298 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:20:41,175 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:20:49,036 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:20:56,887 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:21:04,770 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:21:12,611 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:21:20,436 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:21:28,305 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:21:32,123 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:21:32,124 - greenapi.poller - INFO - [poll] Incoming message from Шер (77006266995@c.us): Покажите кроссовки голден гус балл стар
+2026-02-15 01:21:32,149 - ai.engine - INFO - [77006266995@c.us] Category browsing detected, clearing product from order context
+2026-02-15 01:21:32,165 - catalog.sheets_loader - INFO - Загружаем catalog из Google Sheets 13jPysMCvaSGJPV3ejWJVa8rpZDD2HxPEPRxSIUbst78
+2026-02-15 01:21:32,186 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2026-02-15 01:21:35,344 - gdrive.sheets_client - INFO - Found headers: ['name', 'category', 'price', 'colors', 'descriptions']
+2026-02-15 01:21:35,345 - gdrive.sheets_client - INFO - Loaded 16 products from Google Sheets
+2026-02-15 01:21:35,345 - catalog.sheets_loader - INFO - Загружено 16 товаров из Google Sheets
+2026-02-15 01:21:36,720 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-02-15 01:21:36,836 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event CollectionQueryEvent: capture() takes 1 positional argument but 3 were given
+2026-02-15 01:21:38,344 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:21:38,375 - gdrive.photo_mapper - INFO - Photo match by tokens {'балл', 'стар', 'кроссовки', 'goose', 'голден', 'гус', 'star', 'golden'}: 5 photos, best score=4, min_score=2
+2026-02-15 01:21:41,141 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:21:41,148 - gdrive.photo_mapper - INFO - Photo match by tokens {'балл', 'стар', 'кроссовки', 'goose', 'голден', 'гус', 'star', 'golden'}: 5 photos, best score=4, min_score=2
+2026-02-15 01:21:41,159 - ai.engine - INFO - [77006266995@c.us] Found 4 photos
+2026-02-15 01:21:41,164 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2026-02-15 01:21:45,032 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:21:45,032 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: кроссовки розовые Golden Goose Star (Custom Co-Creation).jpg
+2026-02-15 01:21:47,733 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:21:47,734 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: кроссовки черные Golden Goose Ball Star 2.jpg
+2026-02-15 01:21:50,300 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:21:50,301 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: кроссовки белые Golden Goose Super-Star.jpg
+2026-02-15 01:21:52,892 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:21:52,893 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: кроссовки Golden Goose Super-Star Custom.jpg
+2026-02-15 01:21:55,181 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendMessage/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:21:55,182 - greenapi.client - INFO - Sent text to 77006266995@c.us: Сейчас покажу какие есть. 😊 Какую модель хотите ра...
+2026-02-15 01:21:56,004 - httpx - INFO - HTTP Request: DELETE https://api.green-api.com/waInstance7103508280/deleteNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982/1 "HTTP/1.1 200 OK"
+2026-02-15 01:22:01,842 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:22:09,704 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:22:17,557 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:22:26,907 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:22:35,421 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:22:43,821 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:22:52,216 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:23:00,606 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:23:04,096 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:23:04,097 - greenapi.poller - INFO - [poll] Incoming message from Шер (77006266995@c.us): Давайте эти
+2026-02-15 01:23:04,916 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-02-15 01:23:05,933 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:23:06,954 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-02-15 01:23:06,954 - gdrive.photo_mapper - INFO - No photos found for folder_id=None, product_name=Давайте эти
+2026-02-15 01:23:06,962 - gdrive.photo_mapper - INFO - Photo match by tokens {'балл', 'стар', 'кроссовки', 'goose', 'голден', 'гус', 'star', 'golden'}: 5 photos, best score=4, min_score=2
+2026-02-15 01:23:06,979 - ai.engine - INFO - [77006266995@c.us] Found 4 photos
+2026-02-15 01:23:09,725 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:23:09,728 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: кроссовки розовые Golden Goose Star (Custom Co-Creation).jpg
+2026-02-15 01:23:12,567 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:23:12,568 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: кроссовки черные Golden Goose Ball Star 2.jpg
+2026-02-15 01:23:15,367 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:23:15,367 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: кроссовки белые Golden Goose Super-Star.jpg
+2026-02-15 01:23:18,194 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendFileByUpload/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:23:18,194 - greenapi.client - INFO - Sent image (upload) to 77006266995@c.us: кроссовки Golden Goose Super-Star Custom.jpg
+2026-02-15 01:23:21,086 - httpx - INFO - HTTP Request: POST https://api.green-api.com/waInstance7103508280/sendMessage/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:23:21,094 - greenapi.client - INFO - Sent text to 77006266995@c.us: Какой размер и цвет вам нужны? 😊...
+2026-02-15 01:23:22,524 - httpx - INFO - HTTP Request: DELETE https://api.green-api.com/waInstance7103508280/deleteNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982/2 "HTTP/1.1 200 OK"
+2026-02-15 01:23:28,876 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:23:37,310 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:23:45,773 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:23:54,062 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:24:02,463 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:24:10,857 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:24:19,354 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:24:28,780 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:24:37,177 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:24:45,472 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:24:45,696 - apscheduler.executors.default - INFO - Running job "Check and send nudges (trigger: interval[0:05:00], next run at: 2026-02-15 01:29:45 +05)" (scheduled at 2026-02-15 01:24:45.677514+05:00)
+2026-02-15 01:24:45,711 - scheduler.nudge_scheduler - INFO - Найдено 2 клиентов для проверки
+2026-02-15 01:24:45,711 - apscheduler.executors.default - INFO - Job "Check and send nudges (trigger: interval[0:05:00], next run at: 2026-02-15 01:29:45 +05)" executed successfully
+2026-02-15 01:24:53,865 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:25:02,264 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:25:10,763 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:25:19,054 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:25:27,484 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:25:35,951 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:25:44,337 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:25:52,945 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:26:01,758 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:26:10,245 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:26:18,568 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:26:27,153 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:26:35,553 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:26:43,762 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:26:52,323 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:27:01,765 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:27:10,224 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:27:18,652 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:27:26,853 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:27:36,147 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:27:44,877 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:27:53,253 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:28:01,770 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:28:10,262 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:28:33,289 - main - INFO - Запуск бота Sales Ottenok...
+2026-02-15 01:28:33,312 - gdrive.photo_mapper - INFO - Loaded photo index: 1 products
+2026-02-15 01:28:33,312 - main - INFO - Green API polling enabled.
+2026-02-15 01:28:33,313 - scheduler.nudge_scheduler - INFO - Запуск nudge scheduler...
+2026-02-15 01:28:33,348 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-02-15 01:28:33,384 - apscheduler.scheduler - INFO - Added job "Check and send nudges" to job store "default"
+2026-02-15 01:28:33,384 - apscheduler.scheduler - INFO - Scheduler started
+2026-02-15 01:28:33,384 - scheduler.nudge_scheduler - INFO - Nudge scheduler запущен (проверка каждые 5 минут)
+2026-02-15 01:28:33,385 - main - INFO - Nudge scheduler started.
+2026-02-15 01:28:33,385 - main - INFO - Бот готов к работе!
+2026-02-15 01:28:39,864 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:28:48,362 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:28:57,062 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:29:05,441 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:29:13,753 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:29:22,154 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:29:30,651 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:29:38,946 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:29:47,343 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:29:55,734 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:30:04,138 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:30:12,438 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:30:20,927 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:30:29,290 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:30:37,765 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:30:46,195 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:30:54,416 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:31:02,825 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:31:11,181 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:31:19,592 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:31:28,036 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:31:36,466 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:31:44,893 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:31:53,306 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:32:01,592 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:32:10,084 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:32:18,487 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:32:27,086 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:32:35,484 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:32:43,980 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:32:52,487 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:33:01,085 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:33:09,533 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:33:19,210 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:33:27,704 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:33:33,359 - apscheduler.executors.default - INFO - Running job "Check and send nudges (trigger: interval[0:05:00], next run at: 2026-02-15 01:38:33 +05)" (scheduled at 2026-02-15 01:33:33.347116+05:00)
+2026-02-15 01:33:33,364 - scheduler.nudge_scheduler - INFO - Найдено 2 клиентов для проверки
+2026-02-15 01:33:33,365 - apscheduler.executors.default - INFO - Job "Check and send nudges (trigger: interval[0:05:00], next run at: 2026-02-15 01:38:33 +05)" executed successfully
+2026-02-15 01:33:36,077 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:33:44,707 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:33:53,254 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:34:02,007 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:34:10,444 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:34:19,104 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:34:27,518 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:34:36,087 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"
+2026-02-15 01:34:44,708 - httpx - INFO - HTTP Request: GET https://api.green-api.com/waInstance7103508280/receiveNotification/637e52bb8e0c4299b84148411c4dc8975ccef86ff2e0448982 "HTTP/1.1 200 OK"

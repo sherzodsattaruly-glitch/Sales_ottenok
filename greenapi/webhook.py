@@ -9,6 +9,7 @@ from fastapi import APIRouter, Request, Response
 
 from greenapi.models import WebhookPayload
 from greenapi.client import send_text
+from greenapi.utils import extract_quoted_text as _extract_quoted_text
 from notifications import notify_error
 
 logger = logging.getLogger(__name__)
@@ -81,34 +82,23 @@ async def handle_webhook(request: Request):
         text = message_data.textMessageData.textMessage
     elif message_data.typeMessage == "extendedTextMessage" and message_data.extendedTextMessageData:
         text = message_data.extendedTextMessageData.text
-        # Extract quoted message context
         quoted = message_data.extendedTextMessageData.quotedMessage
         if quoted:
-            quoted_text = ""
-            if "textMessage" in quoted:
-                quoted_text = quoted["textMessage"]
-            elif "caption" in quoted:
-                quoted_text = quoted["caption"]
-            elif "conversation" in quoted:
-                quoted_text = quoted["conversation"]
-
+            quoted_text = _extract_quoted_text(quoted)
             if quoted_text:
                 text = f"{text} (в ответ на: \"{quoted_text}\")"
-    elif message_data.typeMessage == "quotedMessage" and message_data.quotedMessageData:
-        text = message_data.quotedMessageData.text
-        # Extract quoted message context
-        quoted = message_data.quotedMessageData.quotedMessage
-        if quoted:
-            quoted_text = ""
-            if "textMessage" in quoted:
-                quoted_text = quoted["textMessage"]
-            elif "caption" in quoted:
-                quoted_text = quoted["caption"]
-            elif "conversation" in quoted:
-                quoted_text = quoted["conversation"]
-
-            if quoted_text:
-                text = f"{text} (в ответ на: \"{quoted_text}\")"
+    elif message_data.typeMessage == "quotedMessage":
+        text = None
+        if message_data.quotedMessageData:
+            text = message_data.quotedMessageData.text
+            quoted = message_data.quotedMessageData.quotedMessage
+            if quoted:
+                quoted_text = _extract_quoted_text(quoted)
+                if quoted_text:
+                    if text:
+                        text = f"{text} (в ответ на: \"{quoted_text}\")"
+                    else:
+                        text = f"(в ответ на: \"{quoted_text}\")"
     elif message_data.typeMessage == "imageMessage" and message_data.imageMessageData:
         text = message_data.imageMessageData.caption
     elif message_data.typeMessage == "videoMessage" and message_data.videoMessageData:

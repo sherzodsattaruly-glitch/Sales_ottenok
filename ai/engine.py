@@ -87,10 +87,18 @@ _CATEGORY_WORDS = {
 
 
 def _is_category_browsing(user_message: str) -> bool:
-    """Клиент просматривает категорию ('какие сумки есть', 'покажите кроссовки')."""
-    # Используем regex для токенизации (без пунктуации)
+    """Клиент просматривает категорию ('какие сумки есть', 'покажите кроссовки').
+    НЕ считается категорией, если упомянут конкретный бренд/модель.
+    """
     words = re.findall(r'[а-яА-ЯёЁa-zA-Z]+', user_message.lower())
-    return any(w in _CATEGORY_WORDS for w in words)
+    has_category = any(w in _CATEGORY_WORDS for w in words)
+    if not has_category:
+        return False
+    # Если есть конкретный бренд/модель — это запрос конкретного товара, не категория
+    has_product_hint = any(w in _PRODUCT_HINT_TOKENS for w in words)
+    if has_product_hint:
+        return False
+    return True
 
 
 def _detect_browsing_category(user_message: str) -> str:
@@ -466,6 +474,11 @@ def _format_order_context_for_prompt(order_ctx: dict, missing_fields: list[str],
     if not order_ctx.get("product"):
         product_warning = "\n⚠️ ВАЖНО: Клиент еще НЕ ВЫБРАЛ товар. НЕ спрашивай город! Помоги с выбором, ответь на вопросы.\n"
 
+    # Для сумок размер не нужен
+    bag_note = ""
+    if order_ctx.get("product_type") == "bag":
+        bag_note = "\n⚠️ Тип товара — сумка. У сумок НЕТ размера, НЕ спрашивай размер!\n"
+
     return (
         "КОНТЕКСТ ЗАКАЗА:\n"
         f"- город: {order_ctx.get('city') or '-'}\n"
@@ -476,7 +489,8 @@ def _format_order_context_for_prompt(order_ctx: dict, missing_fields: list[str],
         f"- адрес: {order_ctx.get('address') or '-'}\n"
         f"- цвет обязателен: {'да' if color_required else 'нет'}\n"
         f"- недостающие поля: {missing_ru}\n"
-        + product_warning +
+        + product_warning
+        + bag_note +
         "ПРАВИЛО: фразу 'Хорошо, оформляем заказ' можно писать только когда недостающих полей нет."
     )
 
@@ -1164,6 +1178,10 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
     photos = _dedupe_photos(photos)
     photos = _normalize_photo_captions(photos)
 
+    # После показа фото категории — добавить вопрос "Какую выбираете?"
+    if browsing_category and photos and "?" not in assistant_text:
+        assistant_text = f"{assistant_text}|||Какую модель хотите рассмотреть поближе? 😊"
+
     assistant_text = _dedupe_response_parts(assistant_text)
     clean_text = assistant_text.replace("|||", " ").strip()
     clean_text = re.sub(r'\s{2,}', ' ', clean_text)
@@ -1231,9 +1249,11 @@ async def handle_message(chat_id: str, sender_name: str, text: str):
             is_photo_request = _is_photo_request(text)
             product_key = _build_product_key(tokenize_text(text), result["photos"])
 
-            if is_photo_request:
+            if is_photo_request or _is_category_browsing(text):
+                # Клиент просит показать/посмотреть — отправляем даже если уже отправляли
                 should_send_photos = True
             elif product_key and not await has_sent_product_photos(chat_id, product_key):
+                # Новый товар, фото ещё не отправляли
                 should_send_photos = True
 
         if should_send_photos:
@@ -1250,10 +1270,29 @@ async def handle_message(chat_id: str, sender_name: str, text: str):
                 if len(parts) > 1:
                     await asyncio.sleep(0.8)
 
+            # Добавляем подписи к фото (название модели) для контекста reply
+            photos_with_captions = []
+            photo_names = []
+            for img in result["photos"]:
+                fname = img.get("filename", "")
+                caption = _product_key_from_filename(fname) if fname else ""
+                # Красивая подпись: убираем лишние пробелы, capitalize
+                caption = re.sub(r'\s+', ' ', caption).strip()
+                if caption:
+                    caption = caption[0].upper() + caption[1:]
+                photo_names.append(caption or fname)
+                photos_with_captions.append({**img, "caption": caption})
+
             # Отправляем фото
-            await send_multiple_images(chat_id, result["photos"])
+            await send_multiple_images(chat_id, photos_with_captions)
             if product_key:
                 await mark_product_photos_sent(chat_id, product_key)
+
+            # Сохраняем список показанных фото в историю, чтобы GPT знал контекст
+            unique_names = list(dict.fromkeys(photo_names))  # сохранить порядок, убрать дубли
+            if unique_names:
+                photo_note = "[Показаны фото: " + ", ".join(unique_names) + "]"
+                await save_message(chat_id, "assistant", photo_note, "")
 
             # Отправляем вопрос ПОСЛЕ фото
             if follow_up:

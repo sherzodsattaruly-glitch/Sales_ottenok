@@ -8,6 +8,7 @@ import logging
 from greenapi.client import receive_notification, delete_notification
 from greenapi.models import WebhookPayload
 from greenapi.webhook import process_incoming_message
+from greenapi.utils import extract_quoted_text as _extract_quoted_text
 
 logger = logging.getLogger(__name__)
 
@@ -54,34 +55,44 @@ async def poll_notifications(interval: float = 2.0) -> None:
                 # Extract quoted message context
                 quoted = message_data.extendedTextMessageData.quotedMessage
                 if quoted:
-                    quoted_text = ""
-                    # Check different possible fields in quoted message
-                    if "textMessage" in quoted:
-                        quoted_text = quoted["textMessage"]
-                    elif "caption" in quoted:
-                        quoted_text = quoted["caption"]
-                    elif "conversation" in quoted:
-                        quoted_text = quoted["conversation"]
-
+                    quoted_text = _extract_quoted_text(quoted)
                     if quoted_text:
                         text = f"{text} (в ответ на: \"{quoted_text}\")"
 
-            elif message_data.typeMessage == "quotedMessage" and message_data.quotedMessageData:
-                text = message_data.quotedMessageData.text
-                # Extract quoted message context
-                quoted = message_data.quotedMessageData.quotedMessage
-                if quoted:
-                    quoted_text = ""
-                    # Check different possible fields in quoted message
-                    if "textMessage" in quoted:
-                        quoted_text = quoted["textMessage"]
-                    elif "caption" in quoted:
-                        quoted_text = quoted["caption"]
-                    elif "conversation" in quoted:
-                        quoted_text = quoted["conversation"]
+            elif message_data.typeMessage == "quotedMessage":
+                # Reply на сообщение — текст может быть в quotedMessageData или в raw body
+                text = None
+                if message_data.quotedMessageData:
+                    text = message_data.quotedMessageData.text
+                    quoted = message_data.quotedMessageData.quotedMessage
+                    if quoted:
+                        quoted_text = _extract_quoted_text(quoted)
+                        if quoted_text:
+                            if text:
+                                text = f"{text} (в ответ на: \"{quoted_text}\")"
+                            else:
+                                # Пользователь не написал текст, только reply — используем caption фото
+                                text = f"(в ответ на: \"{quoted_text}\")"
 
-                    if quoted_text:
-                        text = f"{text} (в ответ на: \"{quoted_text}\")"
+                # Fallback: ищем текст в raw body
+                if not text:
+                    raw_msg = body.get("messageData", {})
+                    # extendedTextMessageData может присутствовать даже при typeMessage=quotedMessage
+                    ext = raw_msg.get("extendedTextMessageData") or {}
+                    raw_text = ext.get("text", "")
+                    if raw_text:
+                        text = raw_text
+                        quoted = ext.get("quotedMessage")
+                        if quoted:
+                            quoted_text = _extract_quoted_text(quoted)
+                            if quoted_text:
+                                text = f"{text} (в ответ на: \"{quoted_text}\")"
+
+                if not text:
+                    logger.info(
+                        f"[poll] quotedMessage with no extractable text, raw messageData keys: "
+                        f"{list(body.get('messageData', {}).keys())}"
+                    )
 
             elif message_data.typeMessage == "imageMessage" and message_data.imageMessageData:
                 text = message_data.imageMessageData.caption
