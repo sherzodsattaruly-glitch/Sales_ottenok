@@ -76,6 +76,38 @@ _PRODUCT_RAW_HINTS = [
     "миу", "miu", "arcadie", "слингбэк", "slingback",
 ]
 
+# Слова категорий товаров — если клиент упоминает категорию, это новый запрос, а не follow-up
+_CATEGORY_WORDS = {
+    "сумка", "сумки", "сумку", "сумок", "сумочка", "сумочку",
+    "кроссовки", "кроссовок", "кроссовку",
+    "туфли", "туфель", "туфлей", "туфлях",
+    "балетки", "балеток", "балетку",
+    "обувь", "обуви",
+}
+
+
+def _is_category_browsing(user_message: str) -> bool:
+    """Клиент просматривает категорию ('какие сумки есть', 'покажите кроссовки')."""
+    # Используем regex для токенизации (без пунктуации)
+    words = re.findall(r'[а-яА-ЯёЁa-zA-Z]+', user_message.lower())
+    return any(w in _CATEGORY_WORDS for w in words)
+
+
+def _detect_browsing_category(user_message: str) -> str:
+    """Определить тип товара из категориального запроса. Возвращает product_type или ''."""
+    text_l = user_message.lower()
+    if any(w in text_l for w in ("сумк", "сумоч")):
+        return "bag"
+    if any(w in text_l for w in ("кроссовк", )):
+        return "shoes"
+    if any(w in text_l for w in ("туфл", )):
+        return "shoes"
+    if any(w in text_l for w in ("балетк", )):
+        return "shoes"
+    if any(w in text_l for w in ("обувь", "обуви")):
+        return "shoes"
+    return ""
+
 
 def _is_photo_request(text: str) -> bool:
     t = text.lower()
@@ -111,6 +143,9 @@ def _should_use_active_product_query(user_message: str, active_product: str) -> 
         return False
     # If user explicitly names another product/brand, keep current message as query.
     if any(tok in _PRODUCT_HINT_TOKENS for tok in user_tokens):
+        return False
+    # Клиент упоминает категорию товара ("сумки", "кроссовки", "туфли") — это новый запрос
+    if any(w in _CATEGORY_WORDS for w in re.findall(r'[а-яА-ЯёЁa-zA-Z]+', text_l)):
         return False
     return True
 
@@ -609,11 +644,24 @@ async def _get_available_colors_for_product(product_name: str) -> set[str]:
         return set()
 
 
+def _product_key_from_filename(filename: str) -> str:
+    """Извлечь ключ товара из имени файла для группировки.
+    'Сумка черная Chanel 25 2.jpg' → 'сумка черная chanel 25'
+    'сумка Miu Miu Arcadie 1.jpg' → 'сумка miu miu arcadie'
+    """
+    name = filename.lower()
+    name = re.sub(r'\.\w+$', '', name)  # убрать расширение
+    name = re.sub(r'\s+\d+$', '', name)  # убрать порядковый номер фото
+    return name.strip()
+
+
 def _pick_product_photos(found_photos: list[dict], requested_color: str | None = None) -> list[dict]:
     """
     Выбрать фото товара.
     - requested_color задан → отфильтровать по цвету, отдать все подходящие
-    - requested_color = None → обзорный режим: по 1 фото каждого цвета
+    - requested_color = None → обзорный режим:
+      - если несколько разных товаров → по 1 фото каждого товара (витрина)
+      - если один товар → по 1 фото каждого цвета
     """
     if requested_color:
         # Конкретный цвет — фильтруем по имени файла и отдаём все
@@ -634,13 +682,28 @@ def _pick_product_photos(found_photos: list[dict], requested_color: str | None =
             for p in source[:MAX_PHOTOS_PRODUCT_SHOWCASE]
         ]
     else:
-        # Обзорный режим — по 1 фото каждого цвета
-        picked = select_photos_with_color_variety(
-            found_photos,
-            max_total=MAX_PHOTOS_PRODUCT_SHOWCASE,
-            max_per_color=1,
-        )
-        picked = _dedupe_photos(picked)
+        # Группируем по товару (без номера фото и расширения)
+        product_groups: dict[str, list[dict]] = {}
+        for p in found_photos:
+            key = _product_key_from_filename(p.get("filename", ""))
+            product_groups.setdefault(key, []).append(p)
+
+        if len(product_groups) > 1:
+            # Витрина: несколько разных товаров → по 1 фото каждого
+            picked = []
+            for key in product_groups:
+                picked.append(product_groups[key][0])
+                if len(picked) >= MAX_PHOTOS_PRODUCT_SHOWCASE:
+                    break
+            picked = _dedupe_photos(picked)
+        else:
+            # Один товар — по 1 фото каждого цвета
+            picked = select_photos_with_color_variety(
+                found_photos,
+                max_total=MAX_PHOTOS_PRODUCT_SHOWCASE,
+                max_per_color=1,
+            )
+            picked = _dedupe_photos(picked)
         return [
             {
                 "file_id": p["file_id"],
@@ -665,6 +728,29 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
     # Предварительно читаем контекст заказа, чтобы не терять активный товар
     current_order_ctx = await get_order_context(chat_id)
     requested_product_type = _infer_product_type_from_text(user_message)
+
+    # Определяем, просматривает ли клиент категорию ("какие сумки есть?")
+    browsing_category = _is_category_browsing(user_message)
+    browsing_type = _detect_browsing_category(user_message) if browsing_category else ""
+
+    # Если клиент переключился на ДРУГУЮ категорию — сбросить контекст заказа
+    if browsing_category and current_order_ctx.get("product"):
+        old_type = current_order_ctx.get("product_type", "")
+        if browsing_type and old_type and browsing_type != old_type:
+            logger.info(f"[{chat_id}] Category switch: {old_type} -> {browsing_type}, resetting order context")
+            current_order_ctx = {"product_type": browsing_type}
+            await upsert_order_context(chat_id, current_order_ctx)
+        elif browsing_category:
+            # Та же или неизвестная категория, но клиент спрашивает "какие есть" — сброс товара
+            logger.info(f"[{chat_id}] Category browsing detected, clearing product from order context")
+            current_order_ctx["product"] = ""
+            current_order_ctx["size"] = ""
+            current_order_ctx["color"] = ""
+            current_order_ctx["address"] = ""
+            if browsing_type:
+                current_order_ctx["product_type"] = browsing_type
+            await upsert_order_context(chat_id, current_order_ctx)
+
     product_query = user_message
     if _should_use_active_product_query(user_message, current_order_ctx.get("product", "")):
         product_query = current_order_ctx.get("product", "") or user_message
@@ -713,7 +799,8 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
         limit=3,
     )
 
-    if rag_product_name and not extracted_fields.get("product") and not order_ctx.get("product"):
+    # При browse категории НЕ назначаем RAG продукт в заказ (клиент ещё не выбрал)
+    if rag_product_name and not extracted_fields.get("product") and not order_ctx.get("product") and not browsing_category:
         extracted_fields["product"] = rag_product_name
     if not extracted_fields.get("product_type"):
         extracted_fields["product_type"] = _infer_product_type_from_text(
@@ -727,7 +814,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
     pre_merge_missing = _build_missing_fields(order_ctx, color_required_pre)
 
     order_ctx = _merge_order_context(order_ctx, extracted_fields)
-    if not order_ctx.get("product") and rag_product_name:
+    if not order_ctx.get("product") and rag_product_name and not browsing_category:
         order_ctx["product"] = rag_product_name
     if not order_ctx.get("product_type"):
         order_ctx["product_type"] = _infer_product_type_from_text(order_ctx.get("product", ""))
@@ -777,6 +864,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
         # 3. НО НЕ при первом приветствии (is_new_client) - тогда промпт сам задаст вопрос
         should_force_missing_question = (
             not is_new_client  # Добавлена проверка: не задаем доп. вопросы при первом контакте
+            and not browsing_category  # НЕ задавать вопросы при просмотре категории
             and (
                 ready_to_order
                 or address_just_collected

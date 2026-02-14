@@ -317,3 +317,88 @@ async def test_rag_product_context_used(db_path, mock_openai, mock_rag, mock_pho
     finally:
         # Restore original function
         engine_mod.search_products = original_search
+
+
+# ── Category browsing tests ─────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_category_browsing_resets_order_context(db_path, mock_openai, mock_rag, mock_photos):
+    """Category browsing ('какие сумки есть') resets old product from order context."""
+    from ai.engine import generate_response
+    from db.conversations import upsert_order_context, get_order_context
+
+    # Set up: client previously had кроссовки in order context
+    await upsert_order_context("test_chat@c.us", {
+        "city": "Алматы",
+        "product": "Golden Goose Super-Star",
+        "product_type": "shoes",
+        "size": "38",
+        "color": "",
+        "address": "",
+    })
+
+    mock_openai.side_effect = [
+        _make_completion(_fields_json(product_type="bag")),
+        _make_completion("Сейчас покажу какие есть 😊"),
+    ]
+
+    result = await generate_response("test_chat@c.us", "какие сумки у вас есть", "Тест")
+
+    # Product should be cleared (client is browsing, not ordering)
+    ctx = await get_order_context("test_chat@c.us")
+    assert ctx.get("product") == "", f"Product should be cleared during category browsing, got: {ctx.get('product')}"
+
+
+@pytest.mark.asyncio
+async def test_category_browsing_no_forced_questions(db_path, mock_openai, mock_rag, mock_photos):
+    """Category browsing should NOT append missing-field questions (address, city, etc.)."""
+    from ai.engine import generate_response
+    from db.conversations import upsert_order_context, save_message
+
+    # Set up: existing conversation with product context
+    await save_message("test_chat@c.us", "assistant", "Здравствуйте! Рады вас видеть!", "")
+    await upsert_order_context("test_chat@c.us", {
+        "city": "Алматы",
+        "product": "Golden Goose Super-Star",
+        "product_type": "shoes",
+        "size": "38",
+        "color": "",
+        "address": "",
+    })
+
+    mock_openai.side_effect = [
+        _make_completion(_fields_json(product_type="bag")),
+        _make_completion("Сейчас покажу какие есть"),
+    ]
+
+    result = await generate_response("test_chat@c.us", "какие сумки у вас есть", "Тест")
+
+    text = result["text"].lower()
+    # Should NOT ask about address, city, size during category browsing
+    assert "адрес" not in text, f"Should not ask for address during browsing: {result['text']}"
+    assert "город" not in text or "какого" not in text, f"Should not ask for city during browsing: {result['text']}"
+
+
+@pytest.mark.asyncio
+async def test_category_browsing_sends_photos(db_path, mock_openai, mock_rag, mock_photos):
+    """Category browsing should trigger photo search and return photos."""
+    from ai.engine import generate_response
+
+    # Mock photos to return bag photos
+    bag_photos = [
+        {"file_id": "miumiu1", "filename": "сумка Miu Miu Arcadie 1.jpg", "direct_url": ""},
+        {"file_id": "ysl1", "filename": "Сумка черная Yves Saint Laurent Monogram.jpg", "direct_url": ""},
+        {"file_id": "chanel25_1", "filename": "Сумка черная Chanel 25 1.jpg", "direct_url": ""},
+    ]
+    mock_photos.return_value = bag_photos
+
+    mock_openai.side_effect = [
+        _make_completion(_fields_json(product_type="bag")),
+        _make_completion("Сейчас покажу какие есть"),
+    ]
+
+    result = await generate_response("test_chat@c.us", "какие сумки у вас есть", "Тест")
+
+    # Should have photos
+    assert len(result["photos"]) >= 1, f"Expected photos for category browsing, got: {result['photos']}"
