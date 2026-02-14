@@ -867,7 +867,7 @@ app.include_router(admin_router)
 ```
 priority: P1
 estimate: 4h
-status: pending
+status: done
 depends_on: TASK-1.2, TASK-1.6, TASK-1.8, TASK-1.10
 ```
 
@@ -925,7 +925,7 @@ from ai.order_manager import (
 ```
 priority: P1
 estimate: 4h
-status: pending
+status: done
 depends_on: TASK-3.1
 ```
 
@@ -989,7 +989,7 @@ Add `pytest` and `pytest-asyncio` to `requirements.txt` if not present.
 ```
 priority: P2
 estimate: 4h
-status: pending
+status: done
 depends_on: TASK-3.1, TASK-1.3, TASK-1.4
 ```
 
@@ -1041,7 +1041,7 @@ Create `tests/test_engine_integration.py` with mocked external dependencies:
 ```
 priority: P1
 estimate: 2h
-status: pending
+status: done
 depends_on: none
 ```
 
@@ -1107,7 +1107,7 @@ credentials/
 ```
 priority: P2
 estimate: 1h
-status: pending
+status: done
 depends_on: TASK-4.1
 ```
 
@@ -1157,7 +1157,7 @@ services:
 ```
 priority: P2
 estimate: 2h
-status: pending
+status: done
 depends_on: TASK-2.3
 ```
 

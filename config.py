@@ -76,3 +76,6 @@ NUDGE_CHECK_INTERVAL_MINUTES = int(os.getenv("NUDGE_CHECK_INTERVAL_MINUTES", "5"
 
 # Admin API
 ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "")
+
+# N8N Integration
+N8N_ORDER_WEBHOOK_URL = os.getenv("N8N_ORDER_WEBHOOK_URL", "")

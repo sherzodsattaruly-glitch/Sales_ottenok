@@ -1,0 +1,11 @@
+.git
+.env
+__pycache__
+*.pyc
+.venv
+data/chroma_db
+data/ottenok.db
+data/photo_index.json
+data/sales_ottenok.log
+credentials/
+.claude/

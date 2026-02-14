@@ -8,6 +8,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 
+# Enable pytest-asyncio
+pytest_plugins = ('pytest_asyncio',)
+
+
 @pytest.fixture
 def test_inventory_df():
     """Тестовый DataFrame с товарами."""

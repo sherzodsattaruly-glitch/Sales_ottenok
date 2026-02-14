@@ -1,0 +1,220 @@
+"""
+Чистая бизнес-логика управления заказами.
+Все функции синхронные, без I/O — можно тестировать без моков.
+"""
+
+import re
+
+from gdrive.photo_mapper import tokenize_text
+
+# ── Константы ─────────────────────────────────────────────────────────────────
+
+_ORDER_CONFIRM_TEXT = "Хорошо, оформляем заказ"
+_SIZE_REQUIRED_TYPES = {"shoes", "clothes"}
+_ORDER_INTENT_PATTERNS = [
+    "оформ", "заказ", "беру", "возьму", "покуп", "куплю", "зафикс", "адрес доставки",
+]
+_CHECKOUT_HINTS = [
+    "зафикс", "оформить заказ", "оформляем заказ", "адрес доставки", "напишите, пожалуйста, адрес", "куда отправ",
+]
+_FIELD_PROMPT_HINTS = {
+    "city": ["город", "из какого", "откуда"],
+    "product": ["какую модель", "какой товар", "что оформляем"],
+    "size": ["размер"],
+    "color": ["цвет", "расцветк"],
+    "address": ["адрес", "улиц", "дом", "кварти"],
+}
+_PRODUCT_COLOR_OVERRIDES = {
+    "chanel jumbo classic flap": {"черные"},
+    "шанель джумбо": {"черные"},
+    "шанел джумбо": {"черные"},
+}
+
+# ── Функции ───────────────────────────────────────────────────────────────────
+
+
+def _normalize_product_type(value: str) -> str:
+    v = (value or "").strip().lower()
+    if v in {"shoes", "обувь", "shoe"}:
+        return "shoes"
+    if v in {"clothes", "одежда", "clothing"}:
+        return "clothes"
+    if v in {"bag", "bags", "сумка", "сумки"}:
+        return "bag"
+    if v in {"other", "другое"}:
+        return "other"
+    return ""
+
+
+def _infer_product_type_from_text(text: str) -> str:
+    t = (text or "").lower()
+    if "👠" in (text or "") or "👟" in (text or ""):
+        return "shoes"
+    if "👜" in (text or ""):
+        return "bag"
+    if any(x in t for x in [
+        "туф", "крос", "ботин", "лофер", "балетк", "обув", "каблук", "лодоч",
+        "slingback", "джимми чу", "jimmy choo", "saeda", "azia", "opyum", "опиум",
+        "sneaker", "кед",
+    ]):
+        return "shoes"
+    if any(x in t for x in ["плать", "юбк", "куртк", "пальт", "брюк", "джинс", "футболк", "одежд"]):
+        return "clothes"
+    if any(x in t for x in [
+        "сумк", "bag", "chanel 25", "arcadie", "pochette", "flap",
+        "кошелек", "кошелёк", "wallet", "monogram", "jumbo",
+    ]):
+        return "bag"
+    return ""
+
+
+def _sanitize_order_context(ctx: dict) -> dict:
+    return {
+        "city": (ctx.get("city") or "").strip(),
+        "product": (ctx.get("product") or "").strip(),
+        "product_type": _normalize_product_type(ctx.get("product_type") or ""),
+        "size": (ctx.get("size") or "").strip(),
+        "color": (ctx.get("color") or "").strip(),
+        "address": (ctx.get("address") or "").strip(),
+    }
+
+
+def _merge_order_context(base: dict, updates: dict) -> dict:
+    merged = _sanitize_order_context(base)
+    incoming = _sanitize_order_context(updates)
+
+    # Detect product switch — reset dependent fields
+    if incoming.get("product") and merged.get("product"):
+        old_tokens = tokenize_text(merged["product"])
+        new_tokens = tokenize_text(incoming["product"])
+        if old_tokens and new_tokens:
+            overlap = old_tokens & new_tokens
+            similarity = len(overlap) / max(len(old_tokens), len(new_tokens))
+            if similarity < 0.5:
+                merged["size"] = ""
+                merged["color"] = ""
+                merged["address"] = ""
+
+    for key in ("city", "product", "size", "color", "address"):
+        if incoming.get(key):
+            merged[key] = incoming[key]
+    if incoming.get("product_type"):
+        merged["product_type"] = incoming["product_type"]
+    if not merged.get("product_type"):
+        merged["product_type"] = _infer_product_type_from_text(merged.get("product", ""))
+    return merged
+
+
+def _contains_order_confirm(text: str) -> bool:
+    t = (text or "").lower()
+    if "хорошо, оформляем заказ" in t or "хорошо оформляем заказ" in t:
+        return True
+    if "оформ" in t and "заказ" in t:
+        return True
+    return re.search(r"оформ\w*\s+заказ", t) is not None
+
+
+def _strip_order_confirm(text: str) -> str:
+    if not text:
+        return text
+    cleaned = re.sub(
+        r"(?i)\bхорошо,?\s*оформляем\s*заказ\b[.!]?",
+        "",
+        text,
+    )
+    cleaned = re.sub(
+        r"(?i)\bоформ\w*\s+заказ\b[.!]?",
+        "",
+        cleaned,
+    )
+    cleaned = re.sub(r"(?i)\bоформим\s+заказ\b[.!]?", "", cleaned)
+    cleaned = re.sub(r"(?i)\bоформляем\s+заказ\b[.!]?", "", cleaned)
+    cleaned = re.sub(r"\|\|\|\s*\|\|\|", "|||", cleaned)
+    cleaned = re.sub(r"\s{2,}", " ", cleaned).strip(" |")
+    return cleaned.strip() or "Сейчас уточню детали заказа."
+
+
+def _build_missing_fields(order_ctx: dict, color_required: bool) -> list[str]:
+    missing = []
+    # Сначала собираем основные данные в правильном порядке
+    if not order_ctx.get("city"):
+        missing.append("city")
+    if not order_ctx.get("product"):
+        missing.append("product")
+    if order_ctx.get("product_type") in _SIZE_REQUIRED_TYPES and not order_ctx.get("size"):
+        missing.append("size")
+    if color_required and not order_ctx.get("color"):
+        missing.append("color")
+
+    # Адрес запрашиваем ТОЛЬКО после того, как собраны все основные данные
+    # (город, товар, размер если нужен, цвет если нужен)
+    basic_fields_collected = (
+        order_ctx.get("city")
+        and order_ctx.get("product")
+        and (order_ctx.get("product_type") not in _SIZE_REQUIRED_TYPES or order_ctx.get("size"))
+        and (not color_required or order_ctx.get("color"))
+    )
+
+    if basic_fields_collected and not order_ctx.get("address"):
+        missing.append("address")
+
+    return missing
+
+
+def _question_for_missing(field: str) -> str:
+    if field == "city":
+        return "Подскажите, пожалуйста, из какого вы города?"
+    if field == "product":
+        return "Уточните, пожалуйста, какую модель оформляем?"
+    if field == "size":
+        return "Подскажите, пожалуйста, какой размер вам нужен?"
+    if field == "color":
+        return "Подскажите, пожалуйста, какой цвет выбираете?"
+    if field == "address":
+        return "Напишите, пожалуйста, адрес доставки?"
+    return "Подскажите, пожалуйста, недостающие данные для оформления заказа?"
+
+
+def _has_question(text: str) -> bool:
+    return "?" in (text or "")
+
+
+def _has_order_intent(text: str) -> bool:
+    t = (text or "").lower()
+    return any(p in t for p in _ORDER_INTENT_PATTERNS)
+
+
+def _asks_for_field(text: str, field: str) -> bool:
+    t = (text or "").lower()
+    hints = _FIELD_PROMPT_HINTS.get(field, [])
+    return any(h in t for h in hints)
+
+
+def _assistant_already_requests_missing(text: str, missing_fields: list[str]) -> bool:
+    return any(_asks_for_field(text, f) for f in missing_fields)
+
+
+def _strip_checkout_prompts(text: str) -> str:
+    if not text:
+        return text
+    parts = [p.strip() for p in text.split("|||") if p.strip()]
+    kept = []
+    for p in parts:
+        low = p.lower()
+        if len(p) < 120 and any(h in low for h in _CHECKOUT_HINTS):
+            continue
+        kept.append(p)
+    if not kept:
+        return ""
+    return "|||".join(kept)
+
+
+def _get_product_color_overrides(product_name: str) -> set[str]:
+    product = (product_name or "").strip().lower()
+    if not product:
+        return set()
+    result = set()
+    for pattern, colors in _PRODUCT_COLOR_OVERRIDES.items():
+        if pattern in product:
+            result.update(colors)
+    return result
