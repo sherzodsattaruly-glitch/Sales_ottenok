@@ -66,6 +66,10 @@ GREEN_API_POLL_INTERVAL = float(os.getenv("GREEN_API_POLL_INTERVAL", "2.0"))
 INVENTORY_EXCEL_PATH = os.getenv("INVENTORY_EXCEL_PATH", "data/inventory.xlsx")
 INVENTORY_CACHE_TTL = int(os.getenv("INVENTORY_CACHE_TTL", "300"))  # 5 минут
 
+# Catalog (Google Sheets)
+CATALOG_SHEETS_ID = os.getenv("CATALOG_SHEETS_ID", "")
+CATALOG_CACHE_TTL = int(os.getenv("CATALOG_CACHE_TTL", "300"))  # 5 минут
+
 # Telegram alerts
 TELEGRAM_ALERT_BOT_TOKEN = os.getenv("TELEGRAM_ALERT_BOT_TOKEN", "")
 TELEGRAM_ALERT_CHAT_ID = os.getenv("TELEGRAM_ALERT_CHAT_ID", "")
