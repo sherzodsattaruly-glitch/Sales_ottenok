@@ -91,7 +91,22 @@ async def handle_webhook(request: Request):
                 quoted_text = quoted["caption"]
             elif "conversation" in quoted:
                 quoted_text = quoted["conversation"]
-            
+
+            if quoted_text:
+                text = f"{text} (в ответ на: \"{quoted_text}\")"
+    elif message_data.typeMessage == "quotedMessage" and message_data.quotedMessageData:
+        text = message_data.quotedMessageData.text
+        # Extract quoted message context
+        quoted = message_data.quotedMessageData.quotedMessage
+        if quoted:
+            quoted_text = ""
+            if "textMessage" in quoted:
+                quoted_text = quoted["textMessage"]
+            elif "caption" in quoted:
+                quoted_text = quoted["caption"]
+            elif "conversation" in quoted:
+                quoted_text = quoted["conversation"]
+
             if quoted_text:
                 text = f"{text} (в ответ на: \"{quoted_text}\")"
     elif message_data.typeMessage == "imageMessage" and message_data.imageMessageData:

@@ -42,6 +42,7 @@ class MessageData(BaseModel):
     typeMessage: str
     textMessageData: Optional[TextMessageData] = None
     extendedTextMessageData: Optional[ExtendedTextMessageData] = None
+    quotedMessageData: Optional[ExtendedTextMessageData] = None  # Same structure as extendedTextMessage
     imageMessageData: Optional[CaptionMessageData] = None
     videoMessageData: Optional[CaptionMessageData] = None
 
