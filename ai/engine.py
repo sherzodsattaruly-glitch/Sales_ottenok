@@ -425,6 +425,12 @@ def _format_order_context_for_prompt(order_ctx: dict, missing_fields: list[str],
         "address": "адрес",
     }
     missing_ru = ", ".join(fields_ru[f] for f in missing_fields) if missing_fields else "нет"
+
+    # Если клиент еще не выбрал товар - явно запретить собирать город
+    product_warning = ""
+    if not order_ctx.get("product"):
+        product_warning = "\n⚠️ ВАЖНО: Клиент еще НЕ ВЫБРАЛ товар. НЕ спрашивай город! Помоги с выбором, ответь на вопросы.\n"
+
     return (
         "КОНТЕКСТ ЗАКАЗА:\n"
         f"- город: {order_ctx.get('city') or '-'}\n"
@@ -435,6 +441,7 @@ def _format_order_context_for_prompt(order_ctx: dict, missing_fields: list[str],
         f"- адрес: {order_ctx.get('address') or '-'}\n"
         f"- цвет обязателен: {'да' if color_required else 'нет'}\n"
         f"- недостающие поля: {missing_ru}\n"
+        + product_warning +
         "ПРАВИЛО: фразу 'Хорошо, оформляем заказ' можно писать только когда недостающих полей нет."
     )
 
@@ -841,13 +848,14 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
                 break
 
     # Primary: search photos by user message text (most reliable)
-    if not is_answering_missing_field:
-        try:
-            found_photos = await find_product_photos(product_name=user_message)
-            if found_photos:
-                photos.extend(_pick_product_photos(found_photos, requested_color))
-        except Exception as e:
-            logger.warning(f"[{chat_id}] Failed to find photos by message text: {e}")
+    # ВАЖНО: Ищем фото ВСЕГДА, даже если клиент отвечает на вопрос про товар
+    # (он может спрашивать "какие есть кроссовки?", а не отвечать на вопрос)
+    try:
+        found_photos = await find_product_photos(product_name=user_message)
+        if found_photos:
+            photos.extend(_pick_product_photos(found_photos, requested_color))
+    except Exception as e:
+        logger.warning(f"[{chat_id}] Failed to find photos by message text: {e}")
 
     if (
         not photos

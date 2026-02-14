@@ -36,19 +36,34 @@ def _format_results(results) -> list[dict]:
 
 
 async def search_products(query: str, n_results: int = MAX_RAG_RESULTS) -> list[dict]:
-    """Поиск товаров в каталоге по семантическому сходству."""
-    try:
-        collection = chroma_client.get_collection("product_catalog")
-    except Exception:
-        logger.warning("Коллекция product_catalog не найдена")
-        return []
+    """
+    Поиск товаров в каталоге.
 
-    query_embedding = await get_embedding(query)
-    results = collection.query(
-        query_embeddings=[query_embedding],
-        n_results=n_results,
-    )
-    return _format_results(results)
+    ИЗМЕНЕНО: Теперь использует Google Sheets каталог вместо ChromaDB.
+    """
+    from catalog.sheets_loader import search_catalog, format_product_for_prompt
+
+    try:
+        products = search_catalog(query, max_results=n_results)
+
+        # Форматируем в формат, ожидаемый engine.py
+        formatted = []
+        for product in products:
+            formatted.append({
+                "text": format_product_for_prompt(product),
+                "metadata": {
+                    "name": product.get("name", ""),
+                    "category": product.get("category", ""),
+                    "price": product.get("price", ""),
+                    "colors": product.get("colors", ""),
+                }
+            })
+
+        return formatted
+
+    except Exception as e:
+        logger.error(f"Ошибка поиска товаров в Google Sheets каталоге: {e}")
+        return []
 
 
 async def search_scripts(query: str, n_results: int = 3) -> list[dict]:
