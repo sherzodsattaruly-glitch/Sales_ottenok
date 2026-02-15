@@ -78,6 +78,10 @@ TELEGRAM_ALERT_CHAT_ID = os.getenv("TELEGRAM_ALERT_CHAT_ID", "")
 NUDGE_ENABLED = os.getenv("NUDGE_ENABLED", "1").lower() in ("1", "true", "yes")
 NUDGE_CHECK_INTERVAL_MINUTES = int(os.getenv("NUDGE_CHECK_INTERVAL_MINUTES", "5"))
 
+# Message aggregation (debounce): wait N seconds after last message before processing.
+# Set to 0 to disable aggregation.
+MESSAGE_AGGREGATION_DELAY = float(os.getenv("MESSAGE_AGGREGATION_DELAY", "3.0"))
+
 # Admin API
 ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "")
 

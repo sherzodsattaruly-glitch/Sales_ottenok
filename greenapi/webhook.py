@@ -11,7 +11,7 @@ from greenapi.models import WebhookPayload
 from greenapi.client import send_text, download_voice_message
 from greenapi.utils import extract_quoted_text as _extract_quoted_text
 from notifications import notify_error
-from config import MANAGER_CHAT_IDS
+from config import MANAGER_CHAT_IDS, MESSAGE_AGGREGATION_DELAY
 from db.conversations import set_handoff_state
 
 logger = logging.getLogger(__name__)
@@ -23,6 +23,11 @@ _message_handler = None
 
 # Per-chat lock to prevent concurrent processing of messages from the same client
 _chat_locks: dict[str, asyncio.Lock] = {}
+
+# Message aggregation (debounce) state
+_message_buffers: dict[str, list[str]] = {}       # chat_id -> [text1, text2, ...]
+_buffer_sender: dict[str, str] = {}               # chat_id -> sender_name (from first msg)
+_buffer_timers: dict[str, asyncio.Task] = {}       # chat_id -> pending flush timer task
 
 
 def set_message_handler(handler):
@@ -36,8 +41,77 @@ async def _default_echo_handler(chat_id: str, sender_name: str, text: str):
     await send_text(chat_id, f"Вы написали: {text}")
 
 
+def _is_manager_command(chat_id: str, text: str) -> bool:
+    """Check if message is a manager command that should bypass buffering."""
+    if chat_id not in MANAGER_CHAT_IDS:
+        return False
+    t = text.strip().lower()
+    return t.startswith("/handoff") or t.startswith("/bot ")
+
+
 async def process_incoming_message(chat_id: str, sender_name: str, text: str):
-    """Обработка входящего сообщения в фоновой задаче."""
+    """Buffer incoming messages per chat_id; flush after AGGREGATION_DELAY seconds of silence."""
+
+    # Manager commands bypass buffering entirely
+    if _is_manager_command(chat_id, text):
+        await _execute_handler(chat_id, sender_name, text)
+        return
+
+    # If aggregation is disabled, process immediately
+    if MESSAGE_AGGREGATION_DELAY <= 0:
+        await _execute_handler(chat_id, sender_name, text)
+        return
+
+    # Add message to buffer
+    if chat_id not in _message_buffers:
+        _message_buffers[chat_id] = []
+        _buffer_sender[chat_id] = sender_name
+    _message_buffers[chat_id].append(text)
+
+    logger.debug(
+        f"[{chat_id}] Buffered message ({len(_message_buffers[chat_id])} in queue): {text[:80]}"
+    )
+
+    # Cancel existing timer for this chat
+    if chat_id in _buffer_timers:
+        _buffer_timers[chat_id].cancel()
+
+    # Start new timer
+    _buffer_timers[chat_id] = asyncio.create_task(_flush_after_delay(chat_id))
+
+
+async def _flush_after_delay(chat_id: str):
+    """Wait for AGGREGATION_DELAY then flush the buffer."""
+    try:
+        await asyncio.sleep(MESSAGE_AGGREGATION_DELAY)
+        await _flush_buffer(chat_id)
+    except asyncio.CancelledError:
+        pass
+    except Exception as e:
+        logger.error(f"[{chat_id}] Error in flush timer: {e}", exc_info=True)
+
+
+async def _flush_buffer(chat_id: str):
+    """Combine all buffered messages and process as one."""
+    messages = _message_buffers.pop(chat_id, [])
+    sender = _buffer_sender.pop(chat_id, "")
+    _buffer_timers.pop(chat_id, None)
+
+    if not messages:
+        return
+
+    combined_text = "\n".join(messages)
+
+    if len(messages) > 1:
+        logger.info(
+            f"[{chat_id}] Aggregated {len(messages)} messages into one: {combined_text[:120]}"
+        )
+
+    await _execute_handler(chat_id, sender, combined_text)
+
+
+async def _execute_handler(chat_id: str, sender_name: str, text: str):
+    """Acquire per-chat lock and execute the message handler."""
     if chat_id not in _chat_locks:
         _chat_locks[chat_id] = asyncio.Lock()
     async with _chat_locks[chat_id]:
