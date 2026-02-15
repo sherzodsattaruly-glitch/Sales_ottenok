@@ -74,8 +74,9 @@ def check_product_availability(
         overlap = query_tokens & product_tokens
         overlap_score = len(overlap)
 
-        # Требуем минимум 2 совпавших токена для релевантности
-        if overlap_score < 2:
+        # Требуем минимум 2 совпавших токена, но для коротких запросов (1 токен) — 1
+        min_overlap = 1 if len(query_tokens) == 1 else 2
+        if overlap_score < min_overlap:
             continue
 
         # Фильтрация по размеру (если задан)

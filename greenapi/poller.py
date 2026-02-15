@@ -48,6 +48,12 @@ async def poll_notifications(interval: float = 2.0) -> None:
             message_data = payload.messageData
             text = None
 
+            # DEBUG: log raw messageData for reply messages
+            raw_msg = body.get("messageData", {})
+            if raw_msg.get("typeMessage") in ("extendedTextMessage", "quotedMessage"):
+                import json
+                logger.info(f"[poll] RAW messageData: {json.dumps(raw_msg, ensure_ascii=False, default=str)[:1000]}")
+
             if message_data.typeMessage == "textMessage" and message_data.textMessageData:
                 text = message_data.textMessageData.textMessage
             elif message_data.typeMessage == "extendedTextMessage" and message_data.extendedTextMessageData:
@@ -55,9 +61,12 @@ async def poll_notifications(interval: float = 2.0) -> None:
                 # Extract quoted message context
                 quoted = message_data.extendedTextMessageData.quotedMessage
                 if quoted:
+                    logger.info(f"[poll] quotedMessage keys: {list(quoted.keys())}, values preview: {str(quoted)[:300]}")
                     quoted_text = _extract_quoted_text(quoted)
                     if quoted_text:
                         text = f"{text} (в ответ на: \"{quoted_text}\")"
+                    else:
+                        logger.warning(f"[poll] quotedMessage present but extract_quoted_text returned empty")
 
             elif message_data.typeMessage == "quotedMessage":
                 # Reply на сообщение — текст может быть в quotedMessageData или в raw body
@@ -82,7 +91,8 @@ async def poll_notifications(interval: float = 2.0) -> None:
                     raw_text = ext.get("text", "")
                     if raw_text:
                         text = raw_text
-                        quoted = ext.get("quotedMessage")
+                        # quotedMessage лежит на уровне messageData (рядом с extendedTextMessageData)
+                        quoted = raw_msg.get("quotedMessage") or ext.get("quotedMessage")
                         if quoted:
                             quoted_text = _extract_quoted_text(quoted)
                             if quoted_text:

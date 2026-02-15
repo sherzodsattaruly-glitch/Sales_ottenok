@@ -888,47 +888,10 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
         if should_force_missing_question and not _assistant_already_requests_missing(assistant_text, missing_order_fields) and not _has_question(assistant_text):
             assistant_text = f"{assistant_text}|||{_question_for_missing(missing_order_fields[0])}".strip("|")
     elif (ready_to_order or address_just_collected or llm_ready_to_order) and not _contains_order_confirm(assistant_text):
-        # 7c. Проверка наличия товара перед оформлением заказа
-        product_name = order_ctx.get("product", "")
-        size = order_ctx.get("size", "")
-        color = order_ctx.get("color", "")
-
-        if product_name:
-            try:
-                availability = check_product_availability(product_name, size, color)
-
-                if not availability["available"]:
-                    # Товара нет в наличии - не оформляем заказ
-                    logger.info(
-                        "[%s] Товар '%s' (size=%s, color=%s) нет в наличии",
-                        chat_id, product_name, size, color
-                    )
-                    assistant_text = format_availability_message(availability, product_name)
-
-                    # Предлагаем альтернативы если есть
-                    if similar_product_names:
-                        alternatives_text = "Могу предложить похожие варианты: " + ", ".join(similar_product_names)
-                        assistant_text = f"{assistant_text}|||{alternatives_text}".strip("|")
-
-                else:
-                    # Товар в наличии - можно оформлять заказ
-                    logger.info(
-                        "[%s] Товар '%s' (size=%s, color=%s) в наличии: quantity=%d, price=%s",
-                        chat_id, product_name, size, color,
-                        availability["quantity"], availability["price"]
-                    )
-                    availability_msg = format_availability_message(availability, product_name)
-                    assistant_text = f"{availability_msg}|||{_ORDER_CONFIRM_TEXT}".strip("|")
-                    # Уведомляем N8N о подтверждении заказа
-                    asyncio.create_task(notify_order_confirmed(chat_id, order_ctx, sender_name))
-
-            except Exception as e:
-                logger.error("[%s] Ошибка проверки наличия для '%s': %s", chat_id, product_name, e, exc_info=True)
-                # В случае ошибки все равно пытаемся оформить заказ
-                assistant_text = f"{assistant_text}|||{_ORDER_CONFIRM_TEXT}".strip("|")
-        else:
-            # Если product_name не определен, все равно добавляем подтверждение
-            assistant_text = f"{assistant_text}|||{_ORDER_CONFIRM_TEXT}".strip("|")
+        # Оформляем заказ без проверки наличия
+        assistant_text = f"{assistant_text}|||{_ORDER_CONFIRM_TEXT}".strip("|")
+        # Уведомляем N8N о подтверждении заказа
+        asyncio.create_task(notify_order_confirmed(chat_id, order_ctx, sender_name))
 
     assistant_text = _dedupe_response_parts(assistant_text)
 
@@ -1138,7 +1101,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
             )
 
     model_unavailable = False
-    if _is_availability_request(user_message) and specific_query_tokens:
+    if _is_availability_request(user_message) and specific_query_tokens and not browsing_category:
         match_tokens = tokenize_text(primary_product_match or "")
         if not (specific_query_tokens & match_tokens):
             model_unavailable = True
