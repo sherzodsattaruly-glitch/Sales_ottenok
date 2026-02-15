@@ -8,9 +8,11 @@ import logging
 from fastapi import APIRouter, Request, Response
 
 from greenapi.models import WebhookPayload
-from greenapi.client import send_text
+from greenapi.client import send_text, download_voice_message
 from greenapi.utils import extract_quoted_text as _extract_quoted_text
 from notifications import notify_error
+from config import MANAGER_CHAT_IDS
+from db.conversations import set_handoff_state
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +53,81 @@ async def process_incoming_message(chat_id: str, sender_name: str, text: str):
                 logger.error(f"[{chat_id}] Failed to send error message", exc_info=True)
 
 
+async def _handle_outgoing_message(body: dict) -> None:
+    """Detect manager manually typing in client chat and auto-enable handoff.
+
+    Reaction (emoji) on any message in client chat → bot resumes responding.
+    Regular text message → manager takeover, bot stops responding.
+    """
+    try:
+        chat_id = body.get("senderData", {}).get("chatId", "")
+        if not chat_id:
+            return
+        if "@g.us" in chat_id:
+            return
+
+        msg_data = body.get("messageData", {})
+        type_message = msg_data.get("typeMessage", "")
+
+        # Reaction emoji → turn bot back on for this chat
+        if type_message == "reactionMessage":
+            await set_handoff_state(chat_id, False)
+            logger.info(f"[{chat_id}] Reaction detected — handoff DISABLED, bot will respond again")
+            return
+
+        # Extract message text
+        msg_text = ""
+        if type_message == "textMessage":
+            msg_text = (msg_data.get("textMessageData") or {}).get("textMessage", "")
+        elif type_message == "extendedTextMessage":
+            msg_text = (msg_data.get("extendedTextMessageData") or {}).get("text", "")
+
+        cmd = msg_text.strip().lower()
+
+        # /bot on — turn bot back on for this chat (fallback command)
+        if cmd == "/bot on":
+            await set_handoff_state(chat_id, False)
+            logger.info(f"[{chat_id}] /bot on command — handoff DISABLED, bot will respond again")
+            return
+
+        # /bot off — turn bot off for this chat
+        if cmd == "/bot off":
+            await set_handoff_state(chat_id, True)
+            logger.info(f"[{chat_id}] /bot off command — handoff ENABLED, bot stopped")
+            return
+
+        # Regular outgoing message — enable handoff (manager takeover)
+        if chat_id in MANAGER_CHAT_IDS:
+            return
+        await set_handoff_state(chat_id, True)
+        logger.info(f"[{chat_id}] Outgoing message detected (manager takeover), enabling handoff")
+    except Exception as e:
+        logger.error(f"Error handling outgoing message: {e}", exc_info=True)
+
+
+async def _process_voice_message(
+    chat_id: str, sender_name: str, download_url: str, mime_type: str
+) -> None:
+    """Скачать голосовое, транскрибировать через Whisper, обработать как текст."""
+    from ai.engine import transcribe_voice
+
+    try:
+        audio_bytes = await download_voice_message(download_url)
+        if not audio_bytes:
+            logger.warning(f"[{chat_id}] Empty audio download")
+            return
+
+        text = await transcribe_voice(audio_bytes, mime_type)
+        if not text:
+            logger.info(f"[{chat_id}] Whisper returned empty transcription")
+            return
+
+        logger.info(f"[{chat_id}] Voice transcribed: {text[:100]}")
+        await process_incoming_message(chat_id, sender_name, text)
+    except Exception as e:
+        logger.error(f"[{chat_id}] Voice message processing failed: {e}", exc_info=True)
+
+
 @router.post("/webhook")
 async def handle_webhook(request: Request):
     """Принимает вебхуки от Green API."""
@@ -60,6 +137,11 @@ async def handle_webhook(request: Request):
         return Response(status_code=400)
 
     type_webhook = body.get("typeWebhook", "")
+
+    # Менеджер вручную написал в чат клиента — включаем handoff
+    if type_webhook == "outgoingMessageReceived":
+        asyncio.create_task(_handle_outgoing_message(body))
+        return Response(status_code=200)
 
     # Обрабатываем только входящие сообщения
     if type_webhook != "incomingMessageReceived":
@@ -103,6 +185,18 @@ async def handle_webhook(request: Request):
         text = message_data.imageMessageData.caption
     elif message_data.typeMessage == "videoMessage" and message_data.videoMessageData:
         text = message_data.videoMessageData.caption
+    elif message_data.typeMessage == "audioMessage" and message_data.fileMessageData:
+        # Голосовое сообщение — скачиваем и транскрибируем
+        chat_id = payload.senderData.chatId
+        sender_name = payload.senderData.senderName or ""
+        download_url = message_data.fileMessageData.downloadUrl
+        mime_type = message_data.fileMessageData.mimeType or "audio/ogg"
+        if download_url:
+            logger.info(f"[{chat_id}] Voice message from {sender_name}, downloading...")
+            asyncio.create_task(
+                _process_voice_message(chat_id, sender_name, download_url, mime_type)
+            )
+        return Response(status_code=200)
 
     if not text:
         return Response(status_code=200)

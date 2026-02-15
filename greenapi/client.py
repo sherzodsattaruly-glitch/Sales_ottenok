@@ -56,6 +56,26 @@ async def send_text(chat_id: str, text: str) -> dict:
 
 
 @retry_async(max_retries=3, delay=1.0)
+async def send_contact(chat_id: str, phone_contact: int, first_name: str, last_name: str = "") -> dict:
+    """Отправить контактную карточку."""
+    url = f"{BASE_URL}/sendContact/{GREEN_API_TOKEN}"
+    payload = {
+        "chatId": chat_id,
+        "contact": {
+            "phoneContact": phone_contact,
+            "firstName": first_name,
+            "lastName": last_name
+        }
+    }
+    async with httpx.AsyncClient(timeout=30) as client:
+        response = await client.post(url, json=payload)
+        response.raise_for_status()
+        result = response.json()
+        logger.info(f"Sent contact to {chat_id}: {first_name} {last_name} ({phone_contact})")
+        return result
+
+
+@retry_async(max_retries=3, delay=1.0)
 async def receive_notification() -> dict | None:
     """Получить одно уведомление (polling)."""
     url = f"{BASE_URL}/receiveNotification/{GREEN_API_TOKEN}"
@@ -111,6 +131,14 @@ async def send_image_by_upload(chat_id: str, file_bytes: bytes, caption: str = "
         result = response.json()
         logger.info(f"Sent image (upload) to {chat_id}: {filename}")
         return result
+
+
+async def download_voice_message(download_url: str) -> bytes:
+    """Скачать голосовое сообщение по downloadUrl из Green API."""
+    async with httpx.AsyncClient(timeout=30) as client:
+        response = await client.get(download_url)
+        response.raise_for_status()
+        return response.content
 
 
 async def send_multiple_images(chat_id: str, images: list[dict]) -> None:

@@ -30,6 +30,7 @@ from inventory.stock_checker import check_product_availability, format_availabil
 from greenapi.client import send_text, send_multiple_images
 from notifications import notify_error
 from integrations.n8n import notify_order_confirmed
+from integrations.order_notifications import notify_order_to_group
 from ai.order_manager import (
     _normalize_product_type,
     _infer_product_type_from_text,
@@ -57,6 +58,26 @@ from config import (
 logger = logging.getLogger(__name__)
 
 openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+
+
+async def transcribe_voice(audio_bytes: bytes, mime_type: str = "audio/ogg") -> str | None:
+    """Транскрибировать голосовое сообщение через OpenAI Whisper."""
+    ext = "ogg"
+    if "mpeg" in mime_type or "mpga" in mime_type:
+        ext = "mp3"
+    try:
+        transcript = await openai_client.audio.transcriptions.create(
+            model="whisper-1",
+            file=(f"voice.{ext}", audio_bytes),
+            language="ru",
+        )
+        text = transcript.text.strip()
+        logger.info(f"Whisper transcription ({len(audio_bytes)} bytes): {text[:100]}")
+        return text if text else None
+    except Exception as e:
+        logger.error(f"Whisper transcription failed: {e}", exc_info=True)
+        return None
+
 
 _PHOTO_REQUEST_PATTERNS = [
     "фото", "фотку", "фотки", "фотографию", "фотографию", "снимок",
@@ -499,7 +520,8 @@ def _format_order_context_for_prompt(order_ctx: dict, missing_fields: list[str],
         f"- недостающие поля: {missing_ru}\n"
         + product_warning
         + bag_note +
-        "ПРАВИЛО: фразу 'Хорошо, оформляем заказ' можно писать только когда недостающих полей нет."
+        "ПРАВИЛО: фразу 'Хорошо, оформляем заказ' можно писать только когда недостающих полей нет.\n"
+        "ПРАВИЛО: Если клиент задаёт вопрос (цена, качество, доставка) — СНАЧАЛА ответь на его вопрос, ПОТОМ собирай данные заказа. Никогда не игнорируй вопрос клиента."
     )
 
 
@@ -866,15 +888,27 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
     )
 
     assistant_text = completion.choices[0].message.content
+    logger.info(f"[{chat_id}] RAW GPT response: {assistant_text[:500]}")
+    logger.info(f"[{chat_id}] product_context (first 300): {product_context[:300]}")
+    logger.info(f"[{chat_id}] order_guard_prompt: {order_guard_prompt[:300]}")
 
     # 7a. Убираем повторное приветствие на уровне кода
     assistant_text = _strip_duplicate_greeting(assistant_text, history)
     user_order_intent = _has_order_intent(user_message)
+    logger.info(f"[{chat_id}] user_order_intent={user_order_intent}, user_message={user_message[:100]}")
     # Не считаем заказ "готовым" только по предположению LLM без явного сигнала клиента.
     ready_to_order = user_order_intent
     address_just_collected = bool((extracted_fields.get("address") or "").strip())
     if not user_order_intent:
-        assistant_text = _strip_checkout_prompts(assistant_text) or "Сейчас уточню по модели и наличию."
+        stripped = _strip_checkout_prompts(assistant_text)
+        logger.info(f"[{chat_id}] After _strip_checkout_prompts: '{stripped[:300]}'")
+        if stripped:
+            assistant_text = stripped
+        elif not missing_order_fields and (llm_ready_to_order or address_just_collected):
+            # Все поля собраны, заказ будет подтверждён ниже — не нужен fallback
+            assistant_text = ""
+        else:
+            assistant_text = "Сейчас уточню по модели и наличию."
 
     # 7b. Жесткая проверка: до сбора всех данных заказ не оформляем
     if missing_order_fields:
@@ -895,11 +929,13 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
         )
         if should_force_missing_question and not _assistant_already_requests_missing(assistant_text, missing_order_fields) and not _has_question(assistant_text):
             assistant_text = f"{assistant_text}|||{_question_for_missing(missing_order_fields[0])}".strip("|")
-    elif (ready_to_order or address_just_collected or llm_ready_to_order) and not _contains_order_confirm(assistant_text):
-        # Оформляем заказ без проверки наличия
-        assistant_text = f"{assistant_text}|||{_ORDER_CONFIRM_TEXT}".strip("|")
-        # Уведомляем N8N о подтверждении заказа
+    elif (ready_to_order or address_just_collected or llm_ready_to_order):
+        # Все поля собраны — оформляем заказ
+        if not _contains_order_confirm(assistant_text):
+            assistant_text = f"{assistant_text}|||{_ORDER_CONFIRM_TEXT}".strip("|")
+        # Уведомляем N8N и WhatsApp группу о подтверждении заказа
         asyncio.create_task(notify_order_confirmed(chat_id, order_ctx, sender_name))
+        asyncio.create_task(notify_order_to_group(chat_id, order_ctx, sender_name))
 
     assistant_text = _dedupe_response_parts(assistant_text)
 
@@ -921,10 +957,14 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
                 break
 
     # Primary: search photos by user message text (most reliable)
-    # ВАЖНО: Ищем фото ВСЕГДА, даже если клиент отвечает на вопрос про товар
-    # (он может спрашивать "какие есть кроссовки?", а не отвечать на вопрос)
+    # Когда клиент отвечает на вопрос о недостающем поле (цвет, размер, город),
+    # ищем по товару из заказа, а не по сырому сообщению ("Черные" → все чёрные товары)
+    primary_search_query = user_message
+    if is_answering_missing_field and order_ctx.get("product"):
+        primary_search_query = order_ctx["product"]
+        logger.info(f"[{chat_id}] Answering missing field — photo search by order product: {primary_search_query}")
     try:
-        found_photos = await find_product_photos(product_name=user_message)
+        found_photos = await find_product_photos(product_name=primary_search_query)
         if found_photos:
             photos.extend(_pick_product_photos(found_photos, requested_color))
     except Exception as e:

@@ -38,6 +38,12 @@ class CaptionMessageData(BaseModel):
     caption: Optional[str] = ""
 
 
+class FileMessageData(BaseModel):
+    downloadUrl: Optional[str] = None
+    fileName: Optional[str] = None
+    mimeType: Optional[str] = None
+
+
 class MessageData(BaseModel):
     typeMessage: str
     textMessageData: Optional[TextMessageData] = None
@@ -45,6 +51,7 @@ class MessageData(BaseModel):
     quotedMessageData: Optional[ExtendedTextMessageData] = None  # Same structure as extendedTextMessage
     imageMessageData: Optional[CaptionMessageData] = None
     videoMessageData: Optional[CaptionMessageData] = None
+    fileMessageData: Optional[FileMessageData] = None
 
 
 class WebhookPayload(BaseModel):
