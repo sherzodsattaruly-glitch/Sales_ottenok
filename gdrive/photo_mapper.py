@@ -81,6 +81,12 @@ _BRAND_MAP = {
     "балеток": "балетки", "балетку": "балетки",
 }
 
+# Связанные категории: запрос по одному слову также ищет фото по связанным
+_RELATED_CATEGORIES = {
+    "туфли": {"балетки"},
+    "балетки": {"туфли"},
+}
+
 _STOP_WORDS = {
     'покажи', 'покажите', 'отправь', 'отправьте', 'скинь', 'скиньте',
     'пришли', 'пришлите', 'хочу', 'мне', 'есть', 'какие', 'фото',
@@ -241,6 +247,13 @@ async def find_product_photos(
             logger.debug(f"No significant tokens in '{product_name}'")
             return []
 
+        # Расширяем токены связанными категориями (туфли → +балетки)
+        extra_tokens: set[str] = set()
+        for token in query_tokens:
+            if token in _RELATED_CATEGORIES:
+                extra_tokens.update(_RELATED_CATEGORIES[token])
+        expanded_tokens = query_tokens | extra_tokens
+
         # Считаем кол-во значимых слов в исходном запросе (до маппинга)
         import re as _re
         _orig_words = _re.findall(r'[a-zA-Zа-яА-ЯёЁ0-9]+', product_name.lower())
@@ -250,7 +263,7 @@ async def find_product_photos(
         scored_images = []
         for value in _photo_index.values():
             for img in value.get("images", []):
-                score = _match_score(query_tokens, img.get("filename", ""))
+                score = _match_score(expanded_tokens, img.get("filename", ""))
                 if score >= min_score:
                     scored_images.append((score, img))
 
@@ -261,7 +274,7 @@ async def find_product_photos(
             # Берём только фото с лучшим score
             best_matches = [img for score, img in scored_images if score == best_score]
             logger.info(
-                f"Photo match by tokens {query_tokens}: "
+                f"Photo match by tokens {query_tokens} (expanded: {expanded_tokens}): "
                 f"{len(best_matches)} photos, best score={best_score}, min_score={min_score}"
             )
             return best_matches
