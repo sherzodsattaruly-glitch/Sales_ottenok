@@ -533,7 +533,7 @@ async def _extract_order_fields(user_message: str, history: list[dict], current_
     system_text = (
         "Извлеки данные заказа из сообщения клиента. Верни только JSON.\n"
         "Поля JSON: city, product, product_type, size, color, address, ready_to_order.\n"
-        "product_type только: shoes, clothes, bag, other, unknown.\n"
+        "product_type только: shoes, bag, accessory, other, unknown.\n"
         "Если поле неизвестно, возвращай пустую строку.\n"
         "ready_to_order = true только если клиент явно готов оформить/купить."
     )
@@ -826,7 +826,9 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
     history = await get_conversation_history(chat_id)
     is_new_client = len(history) <= 1
     history_text = "\n".join(
-        [f"{'Клиент' if m['role'] == 'user' else 'Алина'}: {m['content']}" for m in history]
+        [f"{'Клиент' if m['role'] == 'user' else 'Алина'}: {m['content']}"
+         for m in history
+         if not m['content'].startswith("[Показаны фото:")]
     )
 
     order_ctx = current_order_ctx
@@ -1256,7 +1258,11 @@ async def handle_message(chat_id: str, sender_name: str, text: str):
         is_new = result.get("is_new_client", False)
 
         # Split response by ||| and send as separate messages
-        parts = [p.strip() for p in result["text"].split("|||") if p.strip()]
+        # Filter out internal markers that GPT may reproduce from history
+        parts = [
+            p.strip() for p in result["text"].split("|||")
+            if p.strip() and not p.strip().startswith("[Показаны фото:")
+        ]
 
         if is_new and parts:
             # Insert trust message after the first part (greeting)

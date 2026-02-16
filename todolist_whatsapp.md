@@ -1,7 +1,7 @@
 # TODO: WhatsApp Order Notification + Soft Handoff
 
 <context>
-project: Sales_ottenok — WhatsApp sales bot "Алина" for clothing boutique "Оттенок"
+project: Sales_ottenok — WhatsApp sales bot "Алина" for women's shoes & accessories store "Оттенок"
 problem: Bot and managers share ONE WhatsApp number. When bot completes an order, managers have no way to know which chat is ready for takeover.
 solution: (1) Send client contact card + order details to a WhatsApp group. (2) Auto-detect manager typing in client chat and silence bot.
 stack: Python 3.11, FastAPI, GREEN-API (WhatsApp), SQLite (aiosqlite), asyncio

@@ -1,6 +1,6 @@
 # Sales Ottenok - WhatsApp Sales Bot
 
-WhatsApp-бот "Алина" — AI-менеджер по продажам для бутика женской одежды "Оттенок" (Алматы, Казахстан).
+WhatsApp-бот "Алина" — AI-менеджер по продажам для магазина женской обуви и аксессуаров "Оттенок" (Алматы, Казахстан).
 
 ## Stack
 
@@ -109,8 +109,8 @@ GREEN-API -> POST /webhook (or poller) -> parse WebhookPayload -> extract text
 
 Tracked in `client_order_context` table. Fields: `city`, `product`, `product_type`, `size`, `color`, `address`.
 
-- `product_type` in {shoes, clothes, bag, other}
-- `size` required only for shoes/clothes
+- `product_type` in {shoes, bag, accessory, other}
+- `size` required only for shoes
 - `color` required only if product has multiple color photos in Drive
 - `address` asked LAST (after all other fields)
 - Order confirmed only when ALL required fields present AND inventory check passes

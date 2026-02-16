@@ -44,12 +44,12 @@ def test_normalize_product_type_russian_bag():
     assert _normalize_product_type("сумка") == "bag"
 
 
-def test_normalize_product_type_clothes():
-    assert _normalize_product_type("clothes") == "clothes"
+def test_normalize_product_type_accessory():
+    assert _normalize_product_type("accessory") == "accessory"
 
 
-def test_normalize_product_type_russian_clothes():
-    assert _normalize_product_type("одежда") == "clothes"
+def test_normalize_product_type_russian_accessory():
+    assert _normalize_product_type("аксессуар") == "accessory"
 
 
 def test_normalize_product_type_other():
@@ -101,10 +101,6 @@ def test_infer_bag_arcadie():
 
 def test_infer_bag_emoji():
     assert _infer_product_type_from_text("👜 сумка") == "bag"
-
-
-def test_infer_clothes_dress():
-    assert _infer_product_type_from_text("красивое платье") == "clothes"
 
 
 def test_infer_empty_for_hello():

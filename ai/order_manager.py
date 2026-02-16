@@ -10,7 +10,7 @@ from gdrive.photo_mapper import tokenize_text
 # ── Константы ─────────────────────────────────────────────────────────────────
 
 _ORDER_CONFIRM_TEXT = "Хорошо, оформляем заказ"
-_SIZE_REQUIRED_TYPES = {"shoes", "clothes"}
+_SIZE_REQUIRED_TYPES = {"shoes"}
 _ORDER_INTENT_PATTERNS = [
     "оформ", "заказ", "беру", "возьму", "покуп", "куплю", "зафикс", "адрес доставки",
     "давай",  # "давайте их", "давайте эту"
@@ -38,10 +38,10 @@ def _normalize_product_type(value: str) -> str:
     v = (value or "").strip().lower()
     if v in {"shoes", "обувь", "shoe"}:
         return "shoes"
-    if v in {"clothes", "одежда", "clothing"}:
-        return "clothes"
     if v in {"bag", "bags", "сумка", "сумки"}:
         return "bag"
+    if v in {"accessory", "accessories", "аксессуар", "аксессуары"}:
+        return "accessory"
     if v in {"other", "другое"}:
         return "other"
     return ""
@@ -59,8 +59,6 @@ def _infer_product_type_from_text(text: str) -> str:
         "sneaker", "кед",
     ]):
         return "shoes"
-    if any(x in t for x in ["плать", "юбк", "куртк", "пальт", "брюк", "джинс", "футболк", "одежд"]):
-        return "clothes"
     if any(x in t for x in [
         "сумк", "bag", "chanel 25", "arcadie", "pochette", "flap",
         "кошелек", "кошелёк", "wallet", "monogram", "jumbo",
@@ -115,24 +113,36 @@ def _contains_order_confirm(text: str) -> bool:
     return re.search(r"оформ\w*\s+заказ", t) is not None
 
 
+_ORDER_CONFIRM_RE = re.compile(
+    r"(?i)\bоформ\w*\s+заказ|\bоформляем\s+заказ|\bоформим\s+заказ|\bхорошо,?\s*оформ",
+)
+
+
 def _strip_order_confirm(text: str) -> str:
+    """Remove parts that contain order confirmation phrases.
+
+    Works on ||| -separated parts: drops any short part (<150 chars) that
+    matches an order-confirm pattern.  For longer parts the matching
+    *sentence* is removed so surrounding text is preserved intact.
+    """
     if not text:
         return text
-    cleaned = re.sub(
-        r"(?i)\bхорошо,?\s*оформляем\s*заказ\b[.!]?",
-        "",
-        text,
-    )
-    cleaned = re.sub(
-        r"(?i)\bоформ\w*\s+заказ\b[.!]?",
-        "",
-        cleaned,
-    )
-    cleaned = re.sub(r"(?i)\bоформим\s+заказ\b[.!]?", "", cleaned)
-    cleaned = re.sub(r"(?i)\bоформляем\s+заказ\b[.!]?", "", cleaned)
-    cleaned = re.sub(r"\|\|\|\s*\|\|\|", "|||", cleaned)
-    cleaned = re.sub(r"\s{2,}", " ", cleaned).strip(" |")
-    return cleaned.strip() or "Сейчас уточню детали заказа."
+    parts = [p.strip() for p in text.split("|||") if p.strip()]
+    kept: list[str] = []
+    for part in parts:
+        if not _ORDER_CONFIRM_RE.search(part):
+            kept.append(part)
+            continue
+        # Short part with order confirm → drop entirely
+        if len(part) < 150:
+            continue
+        # Long part → remove only the sentence containing the phrase
+        sentences = re.split(r"(?<=[.!?])\s+", part)
+        clean_sentences = [s for s in sentences if not _ORDER_CONFIRM_RE.search(s)]
+        if clean_sentences:
+            kept.append(" ".join(clean_sentences))
+    result = "|||".join(kept).strip()
+    return result or "Сейчас уточню детали заказа."
 
 
 def _build_missing_fields(order_ctx: dict, color_required: bool) -> list[str]:
