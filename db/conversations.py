@@ -92,6 +92,17 @@ async def has_sent_product_photos(chat_id: str, product_key: str) -> bool:
         return row is not None
 
 
+async def has_any_sent_photos(chat_id: str) -> bool:
+    """Проверить, отправлялись ли клиенту какие-либо фото ранее."""
+    async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+        cursor = await db.execute(
+            "SELECT 1 FROM sent_photos WHERE chat_id = ? LIMIT 1",
+            (chat_id,),
+        )
+        row = await cursor.fetchone()
+        return row is not None
+
+
 async def mark_product_photos_sent(chat_id: str, product_key: str) -> None:
     """Отметить, что фото товара отправлены клиенту."""
     if not product_key:

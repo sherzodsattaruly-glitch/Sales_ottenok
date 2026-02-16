@@ -17,6 +17,7 @@ from db.conversations import (
     get_conversation_history,
     save_message,
     has_sent_product_photos,
+    has_any_sent_photos,
     mark_product_photos_sent,
     get_handoff_state,
     set_handoff_state,
@@ -1251,8 +1252,20 @@ async def handle_message(chat_id: str, sender_name: str, text: str):
 
         result = await generate_response(chat_id, text, sender_name)
 
+        # For new clients: insert trust message right after greeting
+        is_new = result.get("is_new_client", False)
+
         # Split response by ||| and send as separate messages
         parts = [p.strip() for p in result["text"].split("|||") if p.strip()]
+
+        if is_new and parts:
+            # Insert trust message after the first part (greeting)
+            trust_msg = (
+                "Сразу скажу важный момент, чтобы вы не переживали: "
+                "мы магазин Ottenok, не байеры — у нас есть магазин, примерка, обмен и возврат. "
+                "И по цене мы ниже большинства байеров, потому что работаем напрямую с лучшими фабриками"
+            )
+            parts.insert(1, trust_msg)
 
         # Determine if we should send photos
         should_send_photos = False
@@ -1268,6 +1281,9 @@ async def handle_message(chat_id: str, sender_name: str, text: str):
                 should_send_photos = True
 
         if should_send_photos:
+            # Check if this is the first time we send photos to this client (before marking)
+            is_first_photos = not await has_any_sent_photos(chat_id)
+
             # Send text BEFORE photos, then photos, then follow-up question AFTER photos
             follow_up = None
             # Отделяем последнюю часть как follow_up, если она содержит вопросительный знак
@@ -1304,6 +1320,16 @@ async def handle_message(chat_id: str, sender_name: str, text: str):
             if unique_names:
                 photo_note = "[Показаны фото: " + ", ".join(unique_names) + "]"
                 await save_message(chat_id, "assistant", photo_note, "")
+
+            # Первая отправка фото новому клиенту — сообщение о качестве
+            if is_first_photos:
+                await asyncio.sleep(0.8)
+                quality_msg = (
+                    "Это 1:1 люкс-качество — аккуратные швы, правильная форма, "
+                    "кожа плотная, ничего не торчит.\n\n"
+                    "Мы такие модели отбираем долго, потому что сразу видно уровень."
+                )
+                await send_text(chat_id, quality_msg)
 
             # Отправляем вопрос ПОСЛЕ фото
             if follow_up:
