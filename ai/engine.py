@@ -25,6 +25,8 @@ from db.conversations import (
     upsert_order_context,
     reset_nudge_state,
     update_last_client_message,
+    get_order_pending_confirm,
+    set_order_pending_confirm,
 )
 from gdrive.photo_mapper import find_product_photos, tokenize_text, select_photos_with_color_variety
 from inventory.stock_checker import check_product_availability, format_availability_message
@@ -45,6 +47,8 @@ from ai.order_manager import (
     _assistant_already_requests_missing,
     _strip_checkout_prompts,
     _get_product_color_overrides,
+    _is_order_confirmation,
+    _build_order_summary,
     _ORDER_CONFIRM_TEXT,
 )
 from config import (
@@ -261,6 +265,9 @@ _MODEL_QUERY_IGNORE_TOKENS = {
     "утро", "вечер", "доставка", "доставку", "оплата", "оплату", "заказ",
     "заказать", "купить", "взять", "посмотреть", "подробнее", "подскажите",
     "скажите", "ответьте", "напишите", "отправьте", "пришлите",
+    "увидела", "увидел", "увидели", "видела", "видел", "видели",
+    "инстаграм", "instagram", "инста", "сайт", "сайте",
+    "ваш", "ваша", "ваше", "ваши", "вашем", "вашу",
 }
 _TYPE_FALLBACK_ALTERNATIVES = {
     "shoes": ["Golden Goose Super-Star", "Saint Laurent Opyum", "Chanel Classic Slingbacks", "Jimmy Choo Azia 95"],
@@ -867,6 +874,24 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
         order_ctx["product_type"] = _infer_product_type_from_text(order_ctx.get("product", ""))
 
     await upsert_order_context(chat_id, order_ctx)
+
+    # ── Быстрый путь: ожидаем подтверждение заказа от клиента ──
+    pending_confirm = await get_order_pending_confirm(chat_id)
+    if pending_confirm:
+        if _is_order_confirmation(user_message):
+            # Клиент подтвердил — оформляем заказ
+            confirm_text = "Отлично, оформляю заказ! Скоро свяжемся с вами для уточнения деталей доставки ✨"
+            await save_message(chat_id, "assistant", confirm_text, "Алина")
+            await set_order_pending_confirm(chat_id, False)
+            asyncio.create_task(notify_order_confirmed(chat_id, order_ctx, sender_name))
+            asyncio.create_task(notify_order_to_group(chat_id, order_ctx, sender_name))
+            logger.info(f"[{chat_id}] Order confirmed by client, notifications sent")
+            return {"text": confirm_text, "photos": []}
+        else:
+            # Клиент хочет что-то поменять — сбрасываем флаг, продолжаем обычный флоу
+            await set_order_pending_confirm(chat_id, False)
+            logger.info(f"[{chat_id}] Client did not confirm order, resetting pending flag")
+
     color_required = await _is_color_required(order_ctx.get("product", ""))
     missing_order_fields = _build_missing_fields(order_ctx, color_required)
     order_guard_prompt = _format_order_context_for_prompt(order_ctx, missing_order_fields, color_required)
@@ -933,12 +958,10 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
         if should_force_missing_question and not _assistant_already_requests_missing(assistant_text, missing_order_fields) and not _has_question(assistant_text):
             assistant_text = f"{assistant_text}|||{_question_for_missing(missing_order_fields[0])}".strip("|")
     elif (ready_to_order or address_just_collected or llm_ready_to_order):
-        # Все поля собраны — оформляем заказ
-        if not _contains_order_confirm(assistant_text):
-            assistant_text = f"{assistant_text}|||{_ORDER_CONFIRM_TEXT}".strip("|")
-        # Уведомляем N8N и WhatsApp группу о подтверждении заказа
-        asyncio.create_task(notify_order_confirmed(chat_id, order_ctx, sender_name))
-        asyncio.create_task(notify_order_to_group(chat_id, order_ctx, sender_name))
+        # Все поля собраны — показываем сводку и ждём подтверждения клиента
+        assistant_text = _build_order_summary(order_ctx)
+        await set_order_pending_confirm(chat_id, True)
+        logger.info(f"[{chat_id}] All fields collected, showing order summary for confirmation")
 
     assistant_text = _dedupe_response_parts(assistant_text)
 
@@ -1152,7 +1175,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
             )
 
     model_unavailable = False
-    if _is_availability_request(user_message) and specific_query_tokens and not browsing_category:
+    if _is_availability_request(user_message) and specific_query_tokens and not browsing_category and primary_product_match:
         match_tokens = tokenize_text(primary_product_match or "")
         if not (specific_query_tokens & match_tokens):
             model_unavailable = True

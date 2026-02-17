@@ -220,6 +220,41 @@ def _strip_checkout_prompts(text: str) -> str:
     return "|||".join(kept)
 
 
+_ORDER_CONFIRMATION_PATTERNS = [
+    "да", "верно", "всё верно", "все верно", "правильно", "всё правильно",
+    "все правильно", "подтверждаю", "оформляйте", "оформляй", "ок", "ok",
+    "yes", "угу", "ага", "точно", "да, верно", "да, всё верно", "да, все верно",
+    "да, оформляйте", "да оформляйте", "да, правильно",
+]
+
+
+def _is_order_confirmation(text: str) -> bool:
+    """Проверить, подтверждает ли клиент заказ."""
+    t = (text or "").strip().lower()
+    if not t:
+        return False
+    # Точное совпадение или совпадение с пунктуацией (да!, ок., верно!)
+    cleaned = re.sub(r'[!.,?]+$', '', t).strip()
+    return cleaned in _ORDER_CONFIRMATION_PATTERNS
+
+
+def _build_order_summary(order_ctx: dict) -> str:
+    """Сформировать текстовую сводку заказа для подтверждения клиентом."""
+    lines = ["Ваш заказ:"]
+    if order_ctx.get("product"):
+        lines.append(f"Товар: {order_ctx['product']}")
+    if order_ctx.get("product_type") in _SIZE_REQUIRED_TYPES and order_ctx.get("size"):
+        lines.append(f"Размер: {order_ctx['size']}")
+    if order_ctx.get("color"):
+        lines.append(f"Цвет: {order_ctx['color']}")
+    if order_ctx.get("city"):
+        lines.append(f"Город: {order_ctx['city']}")
+    if order_ctx.get("address"):
+        lines.append(f"Адрес: {order_ctx['address']}")
+    summary = "\n".join(lines)
+    return f"{summary}|||Проверьте, пожалуйста, всё верно? Оформляем?"
+
+
 def _get_product_color_overrides(product_name: str) -> set[str]:
     product = (product_name or "").strip().lower()
     if not product:

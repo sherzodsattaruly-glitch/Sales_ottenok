@@ -72,6 +72,7 @@ def init_db():
             size TEXT DEFAULT '',
             color TEXT DEFAULT '',
             address TEXT DEFAULT '',
+            order_pending_confirm INTEGER DEFAULT 0,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -83,6 +84,7 @@ def init_db():
     _add_column_if_not_exists(cursor, "clients", "last_nudge_at", "TIMESTAMP")
     _add_column_if_not_exists(cursor, "clients", "nudge_state", "TEXT DEFAULT 'pending'")
     _add_column_if_not_exists(cursor, "clients", "last_client_text", "TEXT DEFAULT ''")
+    _add_column_if_not_exists(cursor, "client_order_context", "order_pending_confirm", "INTEGER DEFAULT 0")
 
     conn.commit()
     conn.close()

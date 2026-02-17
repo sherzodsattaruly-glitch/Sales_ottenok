@@ -18,6 +18,8 @@ from ai.order_manager import (
     _assistant_already_requests_missing,
     _strip_checkout_prompts,
     _get_product_color_overrides,
+    _is_order_confirmation,
+    _build_order_summary,
 )
 
 
@@ -432,3 +434,75 @@ def test_sanitize_handles_none_values():
     ctx = {"city": None, "product": None, "product_type": None, "size": None, "color": None, "address": None}
     result = _sanitize_order_context(ctx)
     assert all(v == "" for v in result.values())
+
+
+# ── _is_order_confirmation ─────────────────────────────────────────────────
+
+
+def test_order_confirmation_da():
+    assert _is_order_confirmation("да") is True
+
+
+def test_order_confirmation_da_with_punctuation():
+    assert _is_order_confirmation("Да!") is True
+
+
+def test_order_confirmation_verno():
+    assert _is_order_confirmation("верно") is True
+
+
+def test_order_confirmation_vse_verno():
+    assert _is_order_confirmation("всё верно") is True
+
+
+def test_order_confirmation_oformlyayte():
+    assert _is_order_confirmation("оформляйте") is True
+
+
+def test_order_confirmation_ok():
+    assert _is_order_confirmation("ок") is True
+
+
+def test_order_confirmation_negative_question():
+    assert _is_order_confirmation("а можно размер поменять?") is False
+
+
+def test_order_confirmation_negative_change():
+    assert _is_order_confirmation("нет, размер 39") is False
+
+
+def test_order_confirmation_empty():
+    assert _is_order_confirmation("") is False
+
+
+def test_order_confirmation_none():
+    assert _is_order_confirmation(None) is False
+
+
+# ── _build_order_summary ───────────────────────────────────────────────────
+
+
+def test_order_summary_shoes():
+    ctx = {
+        "city": "Алматы", "product": "Jimmy Choo Azia 95",
+        "product_type": "shoes", "size": "38", "color": "бежевые", "address": "ул. Абая 1",
+    }
+    result = _build_order_summary(ctx)
+    assert "Jimmy Choo Azia 95" in result
+    assert "38" in result
+    assert "бежевые" in result
+    assert "Алматы" in result
+    assert "ул. Абая 1" in result
+    assert "Проверьте" in result
+
+
+def test_order_summary_bag_no_size():
+    ctx = {
+        "city": "Астана", "product": "Chanel Jumbo Classic Flap",
+        "product_type": "bag", "size": "", "color": "черные", "address": "пр. Республики 5",
+    }
+    result = _build_order_summary(ctx)
+    assert "Chanel Jumbo Classic Flap" in result
+    assert "Размер" not in result  # для сумок размер не показывается
+    assert "черные" in result
+    assert "Астана" in result

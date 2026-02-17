@@ -206,6 +206,33 @@ async def upsert_order_context(chat_id: str, fields: dict) -> None:
         await db.commit()
 
 
+async def get_order_pending_confirm(chat_id: str) -> bool:
+    """Проверить, ожидает ли заказ подтверждения от клиента."""
+    async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+        cursor = await db.execute(
+            "SELECT order_pending_confirm FROM client_order_context WHERE chat_id = ?",
+            (chat_id,),
+        )
+        row = await cursor.fetchone()
+        if not row:
+            return False
+        return bool(row[0])
+
+
+async def set_order_pending_confirm(chat_id: str, pending: bool) -> None:
+    """Установить/сбросить флаг ожидания подтверждения заказа."""
+    async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+        await db.execute(
+            """
+            UPDATE client_order_context
+            SET order_pending_confirm = ?
+            WHERE chat_id = ?
+            """,
+            (1 if pending else 0, chat_id),
+        )
+        await db.commit()
+
+
 async def clear_old_conversations(days: int = 30):
     """Удалить переписки старше N дней."""
     async with aiosqlite.connect(SQLITE_DB_PATH) as db:
