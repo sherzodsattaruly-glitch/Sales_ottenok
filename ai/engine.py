@@ -1310,9 +1310,6 @@ async def handle_message(chat_id: str, sender_name: str, text: str):
                 should_send_photos = True
 
         if should_send_photos:
-            # Check if this is the first time we send photos to this client (before marking)
-            is_first_photos = not await has_any_sent_photos(chat_id)
-
             # Send text BEFORE photos, then photos, then follow-up question AFTER photos
             follow_up = None
             # Отделяем последнюю часть как follow_up, если она содержит вопросительный знак
@@ -1350,8 +1347,10 @@ async def handle_message(chat_id: str, sender_name: str, text: str):
                 photo_note = "[Показаны фото: " + ", ".join(unique_names) + "]"
                 await save_message(chat_id, "assistant", photo_note, "")
 
-            # Первая отправка фото новому клиенту — сообщение о качестве
-            if is_first_photos:
+            # Сообщение о качестве — только при запросе конкретной модели и только 1 раз за диалог
+            is_specific_product = not _is_category_browsing(text)
+            quality_already_sent = await has_sent_product_photos(chat_id, "__quality_msg__")
+            if is_specific_product and not quality_already_sent:
                 await asyncio.sleep(0.8)
                 quality_msg = (
                     "Это 1:1 люкс-качество — аккуратные швы, правильная форма, "
@@ -1359,6 +1358,7 @@ async def handle_message(chat_id: str, sender_name: str, text: str):
                     "Мы такие модели отбираем долго, потому что сразу видно уровень."
                 )
                 await send_text(chat_id, quality_msg)
+                await mark_product_photos_sent(chat_id, "__quality_msg__")
 
             # Отправляем вопрос ПОСЛЕ фото
             if follow_up:

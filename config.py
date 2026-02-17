@@ -70,6 +70,9 @@ INVENTORY_CACHE_TTL = int(os.getenv("INVENTORY_CACHE_TTL", "300"))  # 5 мину
 CATALOG_SHEETS_ID = os.getenv("CATALOG_SHEETS_ID", "")
 CATALOG_CACHE_TTL = int(os.getenv("CATALOG_CACHE_TTL", "300"))  # 5 минут
 
+# Photo index (Google Drive)
+PHOTO_INDEX_CACHE_TTL = int(os.getenv("PHOTO_INDEX_CACHE_TTL", "1800"))  # 30 минут
+
 # Telegram alerts
 TELEGRAM_ALERT_BOT_TOKEN = os.getenv("TELEGRAM_ALERT_BOT_TOKEN", "")
 TELEGRAM_ALERT_CHAT_ID = os.getenv("TELEGRAM_ALERT_CHAT_ID", "")

@@ -6,8 +6,10 @@
 import json
 import os
 import logging
+from datetime import datetime, timedelta
 
 from gdrive.client import build_product_photo_index, list_images_in_folder, get_direct_download_url
+from config import PHOTO_INDEX_CACHE_TTL
 
 logger = logging.getLogger(__name__)
 
@@ -15,16 +17,24 @@ CACHE_FILE = "data/photo_index.json"
 
 # РРЅРґРµРєСЃ РІ РїР°РјСЏС‚Рё
 _photo_index: dict = {}
+_photo_index_loaded_at: datetime | None = None
+
+
+def _is_cache_expired() -> bool:
+    if _photo_index_loaded_at is None:
+        return True
+    return datetime.now() - _photo_index_loaded_at > timedelta(seconds=PHOTO_INDEX_CACHE_TTL)
 
 
 def load_photo_index():
     """Р—Р°РіСЂСѓР·РёС‚СЊ РёРЅРґРµРєСЃ РёР· РєСЌС€Р° РёР»Рё РїРµСЂРµСЃРѕР±СЂР°С‚СЊ."""
-    global _photo_index
+    global _photo_index, _photo_index_loaded_at
 
     if os.path.exists(CACHE_FILE):
         try:
             with open(CACHE_FILE, "r", encoding="utf-8") as f:
                 _photo_index = json.load(f)
+            _photo_index_loaded_at = datetime.now()
             logger.info(f"Loaded photo index: {len(_photo_index)} products")
             return
         except Exception as e:
@@ -35,9 +45,10 @@ def load_photo_index():
 
 def rebuild_photo_index():
     """РџРµСЂРµСЃРѕР±СЂР°С‚СЊ РёРЅРґРµРєСЃ РёР· Google Drive Рё СЃРѕС…СЂР°РЅРёС‚СЊ РІ РєСЌС€."""
-    global _photo_index
+    global _photo_index, _photo_index_loaded_at
     try:
         _photo_index = build_product_photo_index()
+        _photo_index_loaded_at = datetime.now()
         with open(CACHE_FILE, "w", encoding="utf-8") as f:
             json.dump(_photo_index, f, ensure_ascii=False, indent=2)
         logger.info(f"Rebuilt photo index: {len(_photo_index)} products")
@@ -210,9 +221,12 @@ async def find_product_photos(
     Найти фото товара по folder_id (из ChromaDB metadata)
     или по нечёткому совпадению названия.
     """
-    # Лениво загружаем индекс при первом обращении
+    # Обновляем индекс если кэш протух или ещё не загружен
     if not _photo_index:
         load_photo_index()
+    elif _is_cache_expired():
+        logger.info("Photo index cache expired, rebuilding from Google Drive...")
+        rebuild_photo_index()
 
     # Прямой поиск по folder_id
     if folder_id:
