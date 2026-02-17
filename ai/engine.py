@@ -143,6 +143,54 @@ def _detect_browsing_category(user_message: str) -> str:
     return ""
 
 
+def _is_vague_followup(text: str) -> bool:
+    """Сообщение — расплывчатый follow-up без конкретики ('Какие?', 'Покажи', 'Давай')."""
+    t = text.strip().lower()
+    t = re.sub(r'[^\w\s]', '', t)  # убираем знаки препинания
+    words = t.split()
+    if not words or len(words) > 4:
+        return False
+    vague_patterns = {
+        "какие", "какое", "какую", "какой", "каких",
+        "покажи", "покажите", "давай", "давайте",
+        "ну", "а", "хочу", "интересно", "есть",
+        "что", "ещё", "еще", "можно", "да",
+    }
+    return all(w in vague_patterns for w in words)
+
+
+def _infer_product_type_from_assistant_message(text: str) -> str:
+    """Извлечь тип товара из ответа ассистента."""
+    t = (text or "").lower()
+    if any(x in t for x in ["обув", "туфл", "кроссовк", "балетк", "лофер", "ботин", "каблук"]):
+        return "shoes"
+    if any(x in t for x in ["сумк", "сумоч", "клатч", "рюкзак"]):
+        return "bag"
+    if any(x in t for x in ["аксессуар", "украшен", "ремен", "ремн", "кошелёк", "кошелек"]):
+        return "accessory"
+    return ""
+
+
+def _extract_search_hint_from_assistant(text: str) -> str:
+    """Извлечь ключевое слово для поиска фото из предыдущего ответа ассистента."""
+    t = (text or "").lower()
+    for pattern, query in [
+        ("кроссовк", "кроссовки"),
+        ("туфл", "туфли"),
+        ("балетк", "балетки"),
+        ("лофер", "лоферы"),
+        ("ботин", "ботинки"),
+        ("обув", "обувь"),
+        ("сумоч", "сумочка"),
+        ("сумк", "сумка"),
+        ("клатч", "клатч"),
+        ("аксессуар", "аксессуары"),
+    ]:
+        if pattern in t:
+            return query
+    return ""
+
+
 def _is_photo_request(text: str) -> bool:
     t = text.lower()
     if any(p in t for p in _PHOTO_REQUEST_PATTERNS):
@@ -846,6 +894,24 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
     if product_results:
         rag_product_name = _extract_product_name_from_result(product_results[0]) or ""
     target_product_type = requested_product_type or _infer_product_type_from_text(primary_product_match or rag_product_name)
+
+    # Если сообщение расплывчатое ("Какие?", "Покажи") и тип товара не определён —
+    # пытаемся извлечь контекст из последнего ответа ассистента
+    assistant_context_hint = ""
+    if not target_product_type and _is_vague_followup(user_message) and history:
+        for m in reversed(history):
+            if m.get("role") == "assistant":
+                last_assistant_text = m.get("content", "")
+                inferred_type = _infer_product_type_from_assistant_message(last_assistant_text)
+                if inferred_type:
+                    target_product_type = inferred_type
+                    assistant_context_hint = _extract_search_hint_from_assistant(last_assistant_text)
+                    logger.info(
+                        f"[{chat_id}] Vague followup '{user_message}' — inferred type "
+                        f"'{target_product_type}' from assistant: '{last_assistant_text[:80]}'"
+                    )
+                break
+
     similar_product_names = _collect_similar_product_names(
         product_results,
         requested_type=target_product_type,
@@ -1071,6 +1137,19 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
                     logger.info(f"[{chat_id}] Found {len(photos)} photos by last assistant product message")
             except Exception as e:
                 logger.warning(f"[{chat_id}] Failed to find photos by last assistant message: {e}")
+
+    # Stage 5: vague followup — ищем по ключевому слову из предыдущего ответа ассистента
+    if not photos and not is_answering_missing_field and assistant_context_hint:
+        try:
+            found_photos = await find_product_photos(product_name=assistant_context_hint)
+            if found_photos:
+                photos.extend(_pick_product_photos(found_photos, requested_color))
+                logger.info(
+                    f"[{chat_id}] Found {len(photos)} photos by assistant context hint "
+                    f"'{assistant_context_hint}'"
+                )
+        except Exception as e:
+            logger.warning(f"[{chat_id}] Failed to find photos by assistant hint '{assistant_context_hint}': {e}")
 
     if not photos and target_product_type:
         for q in _build_fallback_photo_queries(user_message, target_product_type):
