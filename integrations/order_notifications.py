@@ -35,7 +35,9 @@ async def notify_order_to_group(chat_id: str, order_ctx: dict, sender_name: str 
     address = order_ctx.get("address", "")
 
     display_name = sender_name or phone_str
-    lines = [f"Новый заказ от {display_name}:"]
+    order_type = order_ctx.get("order_type", "")
+    prefix = "🔖 ПРЕДЗАКАЗ" if order_type == "preorder" else "✅ Новый заказ"
+    lines = [f"{prefix} от {display_name}:"]
     if product:
         lines.append(f"Товар: {product}")
     if size:

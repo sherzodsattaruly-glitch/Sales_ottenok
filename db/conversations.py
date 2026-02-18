@@ -150,7 +150,7 @@ async def get_order_context(chat_id: str) -> dict:
         db.row_factory = aiosqlite.Row
         cursor = await db.execute(
             """
-            SELECT city, product, product_type, size, color, address
+            SELECT city, product, product_type, size, color, address, order_type
             FROM client_order_context
             WHERE chat_id = ?
             """,
@@ -165,6 +165,7 @@ async def get_order_context(chat_id: str) -> dict:
                 "size": "",
                 "color": "",
                 "address": "",
+                "order_type": "",
             }
         return {
             "city": row["city"] or "",
@@ -173,6 +174,7 @@ async def get_order_context(chat_id: str) -> dict:
             "size": row["size"] or "",
             "color": row["color"] or "",
             "address": row["address"] or "",
+            "order_type": row["order_type"] or "",
         }
 
 
@@ -182,8 +184,8 @@ async def upsert_order_context(chat_id: str, fields: dict) -> None:
         await db.execute(
             """
             INSERT INTO client_order_context
-            (chat_id, city, product, product_type, size, color, address, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            (chat_id, city, product, product_type, size, color, address, order_type, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             ON CONFLICT(chat_id) DO UPDATE SET
                 city = excluded.city,
                 product = excluded.product,
@@ -191,6 +193,7 @@ async def upsert_order_context(chat_id: str, fields: dict) -> None:
                 size = excluded.size,
                 color = excluded.color,
                 address = excluded.address,
+                order_type = excluded.order_type,
                 updated_at = CURRENT_TIMESTAMP
             """,
             (
@@ -201,6 +204,7 @@ async def upsert_order_context(chat_id: str, fields: dict) -> None:
                 (fields.get("size") or "").strip(),
                 (fields.get("color") or "").strip(),
                 (fields.get("address") or "").strip(),
+                (fields.get("order_type") or "").strip(),
             ),
         )
         await db.commit()

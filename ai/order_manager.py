@@ -238,6 +238,18 @@ def _is_order_confirmation(text: str) -> bool:
     return cleaned in _ORDER_CONFIRMATION_PATTERNS
 
 
+def _build_item_desc(order_ctx: dict) -> str:
+    """Сформировать краткое описание товара из контекста заказа для сообщений."""
+    parts = []
+    if order_ctx.get("product"):
+        parts.append(order_ctx["product"])
+    if order_ctx.get("color"):
+        parts.append(order_ctx["color"])
+    if order_ctx.get("size") and order_ctx.get("product_type") in _SIZE_REQUIRED_TYPES:
+        parts.append(f"{order_ctx['size']} размера")
+    return " ".join(parts) if parts else "этот товар"
+
+
 def _build_order_summary(order_ctx: dict) -> str:
     """Сформировать текстовую сводку заказа для подтверждения клиентом."""
     lines = ["Ваш заказ:"]

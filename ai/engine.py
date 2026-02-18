@@ -49,6 +49,7 @@ from ai.order_manager import (
     _get_product_color_overrides,
     _is_order_confirmation,
     _build_order_summary,
+    _build_item_desc,
     _ORDER_CONFIRM_TEXT,
 )
 from config import (
@@ -985,7 +986,14 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
     )
 
     # При browse категории НЕ назначаем RAG продукт в заказ (клиент ещё не выбрал)
-    if rag_product_name and not extracted_fields.get("product") and not order_ctx.get("product") and not browsing_category:
+    # Также не назначаем если сообщение не содержит токенов, связанных с товаром (напр. "Здравствуйте")
+    if (
+        rag_product_name
+        and not extracted_fields.get("product")
+        and not order_ctx.get("product")
+        and not browsing_category
+        and (user_tokens & tokenize_text(rag_product_name))  # сообщение должно упоминать товар
+    ):
         extracted_fields["product"] = rag_product_name
     if not extracted_fields.get("product_type"):
         extracted_fields["product_type"] = _infer_product_type_from_text(
@@ -999,7 +1007,12 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
     pre_merge_missing = _build_missing_fields(order_ctx, color_required_pre)
 
     order_ctx = _merge_order_context(order_ctx, extracted_fields)
-    if not order_ctx.get("product") and rag_product_name and not browsing_category:
+    if (
+        not order_ctx.get("product")
+        and rag_product_name
+        and not browsing_category
+        and (user_tokens & tokenize_text(rag_product_name))
+    ):
         order_ctx["product"] = rag_product_name
     if not order_ctx.get("product_type"):
         order_ctx["product_type"] = _infer_product_type_from_text(order_ctx.get("product", ""))
@@ -1025,6 +1038,50 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
 
     color_required = await _is_color_required(order_ctx.get("product", ""))
     missing_order_fields = _build_missing_fields(order_ctx, color_required)
+
+    # ── Проверка наличия товара перед сбором адреса ──
+    # Когда все поля кроме адреса собраны (или все собраны) — проверяем наличие в каталоге.
+    # Если товара нет — предлагаем предзаказ вместо продолжения оформления.
+    if (
+        not order_ctx.get("order_type")          # ещё не определяли тип заказа
+        and order_ctx.get("product")
+        and order_ctx.get("city")
+        and (missing_order_fields == ["address"] or not missing_order_fields)
+    ):
+        try:
+            availability = check_product_availability(
+                order_ctx.get("product", ""),
+                order_ctx.get("size", ""),
+                order_ctx.get("color", ""),
+            )
+            logger.info(
+                f"[{chat_id}] Inventory check for '{order_ctx['product']}' "
+                f"size='{order_ctx.get('size')}' color='{order_ctx.get('color')}': "
+                f"available={availability['available']}, qty={availability['quantity']}"
+            )
+            if not availability["available"]:
+                item_desc = _build_item_desc(order_ctx)
+                preorder_text = (
+                    f"К сожалению, {item_desc} сейчас нет в наличии. "
+                    "Но мы можем оформить предзаказ — 50% предоплата, остаток при получении. "
+                    "|||Оформляем предзаказ? ✨"
+                )
+                order_ctx["order_type"] = "preorder"
+                await upsert_order_context(chat_id, order_ctx)
+                await set_order_pending_confirm(chat_id, True)
+                clean_text = preorder_text.replace("|||", " ").strip()
+                await save_message(chat_id, "assistant", clean_text, "Алина")
+                logger.info(f"[{chat_id}] Product unavailable — offering pre-order for '{item_desc}'")
+                return {
+                    "text": preorder_text,
+                    "photos": [],
+                    "is_new_client": is_new_client,
+                    "order_context": order_ctx,
+                    "missing_order_fields": [],
+                }
+        except Exception as e:
+            logger.warning(f"[{chat_id}] Inventory check failed: {e}")
+
     order_guard_prompt = _format_order_context_for_prompt(order_ctx, missing_order_fields, color_required)
 
     system_prompt = SYSTEM_PROMPT.format(
