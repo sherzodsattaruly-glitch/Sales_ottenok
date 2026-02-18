@@ -290,6 +290,13 @@ def _parse_handoff_command(text: str) -> tuple[str | None, str | None]:
 
 _GREETING_WORDS = ["здравствуйте", "привет", "добрый день", "добрый вечер", "доброе утро"]
 
+_TRUST_MSG_MARKERS = [
+    "не байеры", "не байер", "не перекупщик",
+    "есть магазин, примерка", "примерка, обмен и возврат",
+    "работаем напрямую с лучшими фабриками",
+    "важный момент, чтобы вы не переживали",
+]
+
 _COLOR_REQUIREMENT_CACHE: dict[str, tuple[bool, float]] = {}
 _COLOR_CACHE_TTL = 1800  # 30 minutes
 _AVAILABILITY_HINTS = [
@@ -323,9 +330,16 @@ _TYPE_FALLBACK_ALTERNATIVES = {
 }
 
 
+def _clean_product_name(name: str) -> str:
+    """Убрать служебные префиксы ('Товар:', 'Модель:') из названия товара."""
+    n = (name or "").strip()
+    n = re.sub(r'^(?:Товар|Модель)\s*:\s*', '', n, flags=re.IGNORECASE)
+    return n.strip()
+
+
 def _extract_product_name_from_result(result: dict) -> str:
     meta = (result.get("metadata") or {})
-    name = (meta.get("product_name") or "").strip()
+    name = _clean_product_name((meta.get("product_name") or "").strip())
     if name:
         return name
     text = (result.get("text") or "").strip()
@@ -489,7 +503,12 @@ def _collect_similar_product_names(
 def _append_similar_products_text(base_text: str, similar_names: list[str]) -> str:
     if not similar_names:
         return base_text
-    variants = "; ".join(similar_names)
+    # Чистим названия от служебных префиксов "Товар:", "Модель:"
+    clean_names = [_clean_product_name(n) for n in similar_names]
+    clean_names = [n for n in clean_names if n]
+    if not clean_names:
+        return base_text
+    variants = "; ".join(clean_names)
     return f"{base_text}|||Похожие варианты: {variants}. Какой вариант показать?"
 
 
@@ -581,16 +600,29 @@ def _format_order_context_for_prompt(order_ctx: dict, missing_fields: list[str],
     )
 
 
-async def _extract_order_fields(user_message: str, history: list[dict], current_ctx: dict) -> dict:
+async def _extract_order_fields(
+    user_message: str, history: list[dict], current_ctx: dict, product_names: list[str] | None = None
+) -> dict:
     history_text = "\n".join(
         f"{m.get('role')}: {m.get('content')}" for m in history[-8:]
     )
+    catalog_hint = ""
+    if product_names:
+        catalog_hint = (
+            "\nНазвания товаров из каталога (используй ИМЕННО эти названия для поля product): "
+            + ", ".join(product_names[:10])
+            + "\n"
+        )
     system_text = (
         "Извлеки данные заказа из сообщения клиента. Верни только JSON.\n"
         "Поля JSON: city, product, product_type, size, color, address, ready_to_order.\n"
+        "ВАЖНО для поля product: используй ТОЧНОЕ название товара из каталога (если есть).\n"
+        "Не копируй сырой текст клиента. Например, если клиент написал 'сумку сан лоран черную', "
+        "а в каталоге есть 'Yves Saint Laurent Monogram' — верни 'Yves Saint Laurent Monogram'.\n"
         "product_type только: shoes, bag, accessory, other, unknown.\n"
         "Если поле неизвестно, возвращай пустую строку.\n"
         "ready_to_order = true только если клиент явно готов оформить/купить."
+        + catalog_hint
     )
     user_text = (
         f"Текущее сообщение: {user_message}\n"
@@ -630,6 +662,28 @@ async def _extract_order_fields(user_message: str, history: list[dict], current_
             "address": "",
             "ready_to_order": False,
         }
+
+
+def _strip_duplicate_trust_message(text: str, history: list[dict]) -> str:
+    """Убираем повтор 'важный момент' / trust message, если бот уже отправлял его ранее."""
+    trust_already_sent = False
+    for m in history:
+        if m.get("role") == "assistant":
+            content = (m.get("content") or "").lower()
+            if any(marker in content for marker in _TRUST_MSG_MARKERS):
+                trust_already_sent = True
+                break
+    if not trust_already_sent:
+        return text
+    # Разбиваем по ||| и убираем части, содержащие trust маркеры
+    parts = [p.strip() for p in text.split("|||") if p.strip()]
+    kept = []
+    for part in parts:
+        part_lower = part.lower()
+        if any(marker in part_lower for marker in _TRUST_MSG_MARKERS):
+            continue
+        kept.append(part)
+    return "|||".join(kept) if kept else text
 
 
 def _strip_duplicate_greeting(text: str, history: list[dict]) -> str:
@@ -755,7 +809,11 @@ def _product_key_from_filename(filename: str) -> str:
     return name.strip()
 
 
-def _pick_product_photos(found_photos: list[dict], requested_color: str | None = None) -> list[dict]:
+def _pick_product_photos(
+    found_photos: list[dict],
+    requested_color: str | None = None,
+    max_showcase: int | None = None,
+) -> list[dict]:
     """
     Выбрать фото товара.
     - requested_color задан → отфильтровать по цвету, отдать все подходящие
@@ -763,6 +821,7 @@ def _pick_product_photos(found_photos: list[dict], requested_color: str | None =
       - если несколько разных товаров → по 1 фото каждого товара (витрина)
       - если один товар → по 1 фото каждого цвета
     """
+    limit = max_showcase or MAX_PHOTOS_PRODUCT_SHOWCASE
     if requested_color:
         # Конкретный цвет — фильтруем по имени файла и отдаём все
         color_prefixes = [p for p, key in _COLOR_PREFIXES.items() if key == requested_color]
@@ -779,7 +838,7 @@ def _pick_product_photos(found_photos: list[dict], requested_color: str | None =
                 "caption": _caption_from_filename(p["filename"]),
                 "filename": p["filename"],
             }
-            for p in source[:MAX_PHOTOS_PRODUCT_SHOWCASE]
+            for p in source[:limit]
         ]
     else:
         # Группируем по товару (без номера фото и расширения)
@@ -793,14 +852,14 @@ def _pick_product_photos(found_photos: list[dict], requested_color: str | None =
             picked = []
             for key in product_groups:
                 picked.append(product_groups[key][0])
-                if len(picked) >= MAX_PHOTOS_PRODUCT_SHOWCASE:
+                if len(picked) >= limit:
                     break
             picked = _dedupe_photos(picked)
         else:
             # Один товар — по 1 фото каждого цвета
             picked = select_photos_with_color_variety(
                 found_photos,
-                max_total=MAX_PHOTOS_PRODUCT_SHOWCASE,
+                max_total=limit,
                 max_per_color=1,
             )
             picked = _dedupe_photos(picked)
@@ -887,7 +946,13 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
     )
 
     order_ctx = current_order_ctx
-    extracted_fields = await _extract_order_fields(user_message, history, order_ctx)
+    # Собираем каноничные имена товаров из RAG для точного извлечения
+    _rag_product_names = []
+    for r in product_results:
+        _name = _extract_product_name_from_result(r)
+        if _name and _name not in _rag_product_names:
+            _rag_product_names.append(_name)
+    extracted_fields = await _extract_order_fields(user_message, history, order_ctx, _rag_product_names)
     llm_ready_to_order = bool(extracted_fields.get("ready_to_order", False))
 
     rag_product_name = ""
@@ -986,8 +1051,9 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
     logger.info(f"[{chat_id}] product_context (first 300): {product_context[:300]}")
     logger.info(f"[{chat_id}] order_guard_prompt: {order_guard_prompt[:300]}")
 
-    # 7a. Убираем повторное приветствие на уровне кода
+    # 7a. Убираем повторное приветствие и trust message на уровне кода
     assistant_text = _strip_duplicate_greeting(assistant_text, history)
+    assistant_text = _strip_duplicate_trust_message(assistant_text, history)
     user_order_intent = _has_order_intent(user_message)
     logger.info(f"[{chat_id}] user_order_intent={user_order_intent}, user_message={user_message[:100]}")
     # Не считаем заказ "готовым" только по предположению LLM без явного сигнала клиента.
@@ -1048,6 +1114,11 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
                 is_answering_missing_field = True
                 break
 
+    # При browse категории — увеличенный лимит фото, чтобы показать все модели
+    photo_showcase_limit = MAX_PHOTOS_PRODUCT_SHOWCASE
+    if browsing_category:
+        photo_showcase_limit = max(MAX_PHOTOS_PRODUCT_SHOWCASE, 10)
+
     # Primary: search photos by user message text (most reliable)
     # Когда клиент отвечает на вопрос о недостающем поле (цвет, размер, город),
     # ищем по товару из заказа, а не по сырому сообщению ("Черные" → все чёрные товары)
@@ -1058,7 +1129,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
     try:
         found_photos = await find_product_photos(product_name=primary_search_query)
         if found_photos:
-            photos.extend(_pick_product_photos(found_photos, requested_color))
+            photos.extend(_pick_product_photos(found_photos, requested_color, max_showcase=photo_showcase_limit))
     except Exception as e:
         logger.warning(f"[{chat_id}] Failed to find photos by message text: {e}")
 
@@ -1254,20 +1325,33 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
             )
 
     model_unavailable = False
-    if _is_availability_request(user_message) and specific_query_tokens and not browsing_category and primary_product_match:
+    if (
+        _is_availability_request(user_message)
+        and specific_query_tokens
+        and not browsing_category
+        and primary_product_match
+        and not photos  # Если фото уже нашлись — товар есть, не помечаем как недоступный
+    ):
         match_tokens = tokenize_text(primary_product_match or "")
         if not (specific_query_tokens & match_tokens):
             model_unavailable = True
 
     if model_unavailable:
+        # Исключаем товары, фото которых уже были найдены/показаны в этом запросе
+        _shown_product_names = set()
+        for p in photos:
+            cap = _caption_from_filename(p.get("filename", ""))
+            if cap:
+                _shown_product_names.add(cap.lower())
+        _exclude = {primary_product_match, rag_product_name, order_ctx.get("product", "")} | _shown_product_names
         alternatives = _collect_similar_product_names(
             product_results,
             requested_type=target_product_type,
-            exclude_names=set(),
+            exclude_names=_exclude,
             limit=3,
         )
         if not alternatives:
-            alternatives = _collect_similar_product_names(product_results, requested_type="", exclude_names=set(), limit=3)
+            alternatives = _collect_similar_product_names(product_results, requested_type="", exclude_names=_exclude, limit=3)
         if not alternatives:
             alternatives = _fallback_alternative_names(
                 target_product_type,
@@ -1308,7 +1392,7 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
 
     return {
         "text": assistant_text,
-        "photos": photos[:MAX_PHOTOS_PRODUCT_SHOWCASE],
+        "photos": photos[:photo_showcase_limit],
         "is_new_client": is_new_client,
         "order_context": order_ctx,
         "missing_order_fields": missing_order_fields,
@@ -1374,6 +1458,8 @@ async def handle_message(chat_id: str, sender_name: str, text: str):
                 "И по цене мы ниже большинства байеров, потому что работаем напрямую с лучшими фабриками"
             )
             parts.insert(1, trust_msg)
+            # Сохраняем trust message в историю, чтобы GPT не повторял его
+            await save_message(chat_id, "assistant", trust_msg, "Алина")
 
         # Determine if we should send photos
         should_send_photos = False
