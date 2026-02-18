@@ -238,6 +238,20 @@ def _is_order_confirmation(text: str) -> bool:
     return cleaned in _ORDER_CONFIRMATION_PATTERNS
 
 
+_NEGATIVE_PATTERNS = {
+    "нет", "не нужно", "не надо", "не хочу", "спасибо нет",
+    "подумаю", "посмотрим", "может позже", "пока нет", "не сейчас",
+    "передумал", "передумала", "воздержусь", "пока",
+}
+_NEGATIVE_SUBSTRINGS = ["подумаю", "посмотрим", "позже", "потом", "когда-нибудь", "пока нет"]
+
+
+def _is_negative_or_undecided(text: str) -> bool:
+    """Проверить, отказывается ли клиент или откладывает решение."""
+    t = re.sub(r'[!.,?]+$', '', (text or "").strip().lower()).strip()
+    return t in _NEGATIVE_PATTERNS or any(p in t for p in _NEGATIVE_SUBSTRINGS)
+
+
 def _build_item_desc(order_ctx: dict) -> str:
     """Сформировать краткое описание товара из контекста заказа для сообщений."""
     parts = []

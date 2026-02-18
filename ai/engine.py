@@ -48,6 +48,7 @@ from ai.order_manager import (
     _strip_checkout_prompts,
     _get_product_color_overrides,
     _is_order_confirmation,
+    _is_negative_or_undecided,
     _build_order_summary,
     _build_item_desc,
     _ORDER_CONFIRM_TEXT,
@@ -1032,9 +1033,54 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
             logger.info(f"[{chat_id}] Order confirmed by client, notifications sent")
             return {"text": confirm_text, "photos": []}
         else:
-            # Клиент хочет что-то поменять — сбрасываем флаг, продолжаем обычный флоу
             await set_order_pending_confirm(chat_id, False)
             logger.info(f"[{chat_id}] Client did not confirm order, resetting pending flag")
+            if order_ctx.get("order_type") == "preorder":
+                order_ctx.update({
+                    "product": "", "product_type": "", "size": "",
+                    "color": "", "order_type": "alternatives_offered",
+                })
+                await upsert_order_context(chat_id, order_ctx)
+                clarify_text = (
+                    "Хорошо! Давайте подберём другой вариант. "
+                    "Уточните, пожалуйста — другой цвет, размер или совсем другая модель? ✨"
+                )
+                await save_message(chat_id, "assistant", clarify_text, "Алина")
+                logger.info(f"[{chat_id}] Pre-order declined — cleared product fields, offering alternatives")
+                return {"text": clarify_text, "photos": [], "is_new_client": is_new_client,
+                        "order_context": order_ctx, "missing_order_fields": []}
+
+    # ── Клиент не заинтересован после предложения альтернатив → приглашаем на примерку ──
+    if order_ctx.get("order_type") == "alternatives_offered":
+        if _is_negative_or_undecided(user_message):
+            order_ctx["order_type"] = ""
+            await upsert_order_context(chat_id, order_ctx)
+            store_text = (
+                "Будем рады видеть вас в нашем шоуруме! 👠 "
+                "Вы сможете примерить и выбрать идеальный вариант вживую."
+                "|||📍 Адрес: г. Алматы, Егизбаева 7/2"
+                "\n🕙 Работаем ежедневно с 10:00 до 22:00"
+                "\nhttps://2gis.kz/almaty/geo/70000001107511471"
+            )
+            tg_text = (
+                "Также вы можете следить за обновлениями товаров в нашем телеграм канале ✨"
+                "|||https://t.me/kzottenokkz"
+            )
+            full_text = store_text + "|||" + tg_text
+            clean = full_text.replace("|||", " ").strip()
+            await save_message(chat_id, "assistant", clean, "Алина")
+            logger.info(f"[{chat_id}] Client declined alternatives — sent store address + Telegram")
+            return {
+                "text": full_text,
+                "photos": [],
+                "is_new_client": is_new_client,
+                "order_context": order_ctx,
+                "missing_order_fields": [],
+            }
+        else:
+            # Клиент всё же интересуется чем-то другим — сбрасываем флаг, нормальный флоу
+            order_ctx["order_type"] = ""
+            await upsert_order_context(chat_id, order_ctx)
 
     color_required = await _is_color_required(order_ctx.get("product", ""))
     missing_order_fields = _build_missing_fields(order_ctx, color_required)
