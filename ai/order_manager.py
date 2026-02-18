@@ -75,6 +75,7 @@ def _sanitize_order_context(ctx: dict) -> dict:
         "size": (ctx.get("size") or "").strip(),
         "color": (ctx.get("color") or "").strip(),
         "address": (ctx.get("address") or "").strip(),
+        "order_type": (ctx.get("order_type") or "").strip(),
     }
 
 
