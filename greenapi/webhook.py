@@ -11,7 +11,7 @@ from greenapi.models import WebhookPayload
 from greenapi.client import send_text, download_voice_message
 from greenapi.utils import extract_quoted_text as _extract_quoted_text
 from notifications import notify_error
-from config import MANAGER_CHAT_IDS, MESSAGE_AGGREGATION_DELAY
+from config import MANAGER_CHAT_IDS, MESSAGE_AGGREGATION_DELAY, GREEN_API_POLLING
 from db.conversations import set_handoff_state
 
 logger = logging.getLogger(__name__)
@@ -205,6 +205,11 @@ async def _process_voice_message(
 @router.post("/webhook")
 async def handle_webhook(request: Request):
     """Принимает вебхуки от Green API."""
+    # Когда polling активен, все уведомления обрабатываются через poller —
+    # webhook не должен дублировать обработку
+    if GREEN_API_POLLING:
+        return Response(status_code=200)
+
     try:
         body = await request.json()
     except Exception:
