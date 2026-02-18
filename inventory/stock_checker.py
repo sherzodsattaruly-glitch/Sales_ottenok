@@ -87,9 +87,16 @@ def check_product_availability(
 
         # Фильтрация по цвету (если задан)
         if color and color.strip():
-            # Проверяем вхождение цвета (например, "розов" в "розовые")
             color_lower = color.strip().lower()
-            if color_lower not in row_color and row_color not in color_lower:
+            # Сравниваем по корню цвета (первые 4+ символа), чтобы
+            # "бежевый" совпадал с "бежевые", "черный" с "черные" и т.д.
+            color_stem = color_lower[:min(4, len(color_lower))]
+            row_stem = row_color[:min(4, len(row_color))]
+            if (
+                color_lower not in row_color
+                and row_color not in color_lower
+                and color_stem != row_stem
+            ):
                 continue
 
         # Добавляем совпадение
