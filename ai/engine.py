@@ -616,8 +616,11 @@ async def _extract_order_fields(
             + "\n"
         )
     system_text = (
-        "Извлеки данные заказа из сообщения клиента. Верни только JSON.\n"
+        "Извлеки данные заказа ТОЛЬКО из ТЕКУЩЕГО сообщения клиента. Верни только JSON.\n"
         "Поля JSON: city, product, product_type, size, color, address, ready_to_order.\n"
+        "КРИТИЧЕСКИ ВАЖНО: извлекай данные ТОЛЬКО из текущего сообщения, НЕ из истории переписки.\n"
+        "Если в текущем сообщении нет упоминания поля — возвращай пустую строку для этого поля.\n"
+        "НЕ восстанавливай и НЕ повторяй данные из предыдущих сообщений или контекста профиля.\n"
         "ВАЖНО для поля product: используй ТОЧНОЕ название товара из каталога (если есть).\n"
         "Не копируй сырой текст клиента. Например, если клиент написал 'сумку сан лоран черную', "
         "а в каталоге есть 'Yves Saint Laurent Monogram' — верни 'Yves Saint Laurent Monogram'.\n"
@@ -885,6 +888,9 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
 
     # Сбрасываем дожим когда клиент отвечает
     await reset_nudge_state(chat_id)
+
+    # Токенизируем сообщение пользователя (используется в нескольких местах ниже)
+    user_tokens = tokenize_text(user_message)
 
     # Предварительно читаем контекст заказа, чтобы не терять активный товар
     current_order_ctx = await get_order_context(chat_id)
@@ -1212,7 +1218,6 @@ async def generate_response(chat_id: str, user_message: str, sender_name: str) -
 
     # 8. Ищем фото товаров из Google Drive
     photos = []
-    user_tokens = tokenize_text(user_message)
 
     # Определяем режим фото: конкретный цвет → все фото этого цвета, иначе → по 1 каждого цвета
     requested_color = _detect_color_in_text(user_message)
