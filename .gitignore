@@ -16,6 +16,8 @@ data/photo_index.json
 data/sales_ottenok.log
 data/bot.log
 data/agent_sessions.db
+data/agent_sessions.db-shm
+data/agent_sessions.db-wal
 
 # Media in chat exports (only .txt used by knowledge builder)
 data/knowledge_base/chats/**/*.mp4
