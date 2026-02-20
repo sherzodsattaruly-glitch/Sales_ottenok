@@ -79,7 +79,8 @@ async def get_photos(
     if photos:
         await send_photos(chat_id, photos)
         await db.mark_photos_sent(chat_id, product_key)
-        return json.dumps({"sent": True, "count": len(photos)})
+        captions = [p["caption"] for p in photos if p.get("caption")]
+        return json.dumps({"sent": True, "count": len(photos), "captions": captions}, ensure_ascii=False)
     return json.dumps({"sent": False, "reason": "Фото не найдены"})
 
 

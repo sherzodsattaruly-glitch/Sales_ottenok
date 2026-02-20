@@ -306,6 +306,29 @@ async def load_photo_index():
     return _photo_index
 
 
+def _make_photo_caption(product_key: str, catalog: list[dict]) -> str:
+    """Сформировать подпись к фото: название товара + цена из каталога."""
+    # Красивое название: capitalize каждого слова из ключа индекса
+    display_name = product_key.title()
+
+    # Поиск цены в каталоге по пересечению токенов
+    key_tokens = set(product_key.lower().split())
+    best_price = ""
+    best_overlap = 0
+    for item in catalog:
+        name = item.get("product_name", "").lower()
+        name_tokens = set(name.split())
+        overlap = len(key_tokens & name_tokens)
+        if overlap > best_overlap:
+            best_overlap = overlap
+            best_price = item.get("price", "")
+            display_name = item.get("product_name", display_name)
+
+    if best_price:
+        return f"{display_name} — {best_price}"
+    return display_name
+
+
 async def find_photos(product: str, color: str = "", max_photos: int = 6) -> list[dict]:
     """Найти фото товара. Возвращает [{file_id, filename, caption}].
 
@@ -341,6 +364,9 @@ async def find_photos(product: str, color: str = "", max_photos: int = 6) -> lis
     # Сортируем по score desc
     matched.sort(key=lambda x: x[1], reverse=True)
 
+    # Загружаем каталог для подписей (цена)
+    catalog = await get_catalog()
+
     # Собираем фото
     result = []
     # Конкретный товар: 1 матч, точный матч, или один явный лидер по score
@@ -350,16 +376,19 @@ async def find_photos(product: str, color: str = "", max_photos: int = 6) -> lis
         or (len(matched) >= 2 and matched[0][1] > matched[1][1])
     )
     if is_specific:
-        # Конкретный товар — все его фото
-        photos = index[matched[0][0]]
+        # Конкретный товар — все его фото (одна подпись для всех)
+        key = matched[0][0]
+        photos = index[key]
         if color_lower:
             filtered = [p for p in photos if color_lower in p["name"].lower()]
             if filtered:
                 photos = filtered
+        caption = _make_photo_caption(key, catalog)
         for p in photos[:max_photos]:
-            result.append({"file_id": p["file_id"], "filename": p["name"], "caption": ""})
+            result.append({"file_id": p["file_id"], "filename": p["name"], "caption": caption})
     else:
-        # Общий запрос (туфли, сумки) — по 1 фото от каждого товара
+        # Общий запрос (туфли, сумки) — по 1 фото от каждого товара с нумерацией
+        num = 0
         for key, _ in matched:
             photos = index[key]
             if color_lower:
@@ -367,7 +396,10 @@ async def find_photos(product: str, color: str = "", max_photos: int = 6) -> lis
                 if filtered:
                     photos = filtered
             if photos:
-                result.append({"file_id": photos[0]["file_id"], "filename": photos[0]["name"], "caption": ""})
+                num += 1
+                caption = _make_photo_caption(key, catalog)
+                numbered_caption = f"{num}. {caption}"
+                result.append({"file_id": photos[0]["file_id"], "filename": photos[0]["name"], "caption": numbered_caption})
             if len(result) >= max_photos:
                 break
 
