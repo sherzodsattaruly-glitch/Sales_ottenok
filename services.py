@@ -234,13 +234,19 @@ async def check_stock(product: str, size: str = "", color: str = "") -> dict:
 # ── Фото (Google Drive) ─────────────────────────────────────
 
 _photo_index: dict[str, list[dict]] = {}  # product_key -> [{file_id, name}]
+_photo_bytes: dict[str, bytes] = {}  # file_id -> image bytes
 _photo_index_ts: float = 0
 PHOTO_INDEX_TTL = 1800  # 30 мин
 
 
+def get_photo_bytes(file_id: str) -> bytes | None:
+    """Получить байты фото из in-memory кэша."""
+    return _photo_bytes.get(file_id)
+
+
 async def load_photo_index():
-    """Загрузить индекс фото из Google Drive. Retry до 3 раз при ошибках."""
-    global _photo_index, _photo_index_ts
+    """Загрузить индекс + байты всех фото из Google Drive в память. Retry до 3 раз."""
+    global _photo_index, _photo_bytes, _photo_index_ts
     if _photo_index and (time.time() - _photo_index_ts) < PHOTO_INDEX_TTL:
         return _photo_index
 
@@ -248,8 +254,12 @@ async def load_photo_index():
         return _photo_index
 
     def _load():
+        from io import BytesIO
+        from googleapiclient.http import MediaIoBaseDownload
+
         svc = _drive_service()
-        # Сначала проверяем подпапки (продукт = папка)
+
+        # 1. Собираем индекс (метаданные)
         folders = svc.files().list(
             q=f"'{GOOGLE_DRIVE_PHOTOS_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder'",
             fields="files(id, name)",
@@ -257,6 +267,7 @@ async def load_photo_index():
         ).execute().get("files", [])
 
         index = {}
+        all_file_ids = []
 
         if folders:
             for folder in folders:
@@ -268,8 +279,8 @@ async def load_photo_index():
                 if photos:
                     key = folder["name"].lower().strip()
                     index[key] = [{"file_id": p["id"], "name": p["name"]} for p in photos]
+                    all_file_ids.extend(p["id"] for p in photos)
         else:
-            # Плоская структура: "Chanel балетки бежевые 1.jpg" → "chanel балетки бежевые"
             images = svc.files().list(
                 q=f"'{GOOGLE_DRIVE_PHOTOS_FOLDER_ID}' in parents and mimeType contains 'image/'",
                 fields="files(id, name)",
@@ -282,16 +293,34 @@ async def load_photo_index():
                 if key not in index:
                     index[key] = []
                 index[key].append({"file_id": img["id"], "name": name})
-        return index
+                all_file_ids.append(img["id"])
+
+        # 2. Скачиваем все фото в память (последовательно, один Drive service)
+        bytes_cache = {}
+        for fid in all_file_ids:
+            try:
+                request = svc.files().get_media(fileId=fid)
+                buf = BytesIO()
+                downloader = MediaIoBaseDownload(buf, request)
+                done = False
+                while not done:
+                    _, done = downloader.next_chunk()
+                bytes_cache[fid] = buf.getvalue()
+            except Exception as e:
+                logger.warning(f"Failed to download photo {fid}: {e}")
+
+        return index, bytes_cache
 
     max_attempts = 3
     for attempt in range(1, max_attempts + 1):
         try:
-            result = await asyncio.get_event_loop().run_in_executor(None, _load)
-            if result:
-                _photo_index = result
+            index, bytes_cache = await asyncio.get_event_loop().run_in_executor(None, _load)
+            if index:
+                _photo_index = index
+                _photo_bytes = bytes_cache
                 _photo_index_ts = time.time()
-                logger.info(f"Photo index loaded: {len(_photo_index)} products")
+                total_mb = sum(len(b) for b in bytes_cache.values()) / 1024 / 1024
+                logger.info(f"Photo cache loaded: {len(index)} products, {len(bytes_cache)} files, {total_mb:.1f} MB")
                 return _photo_index
             else:
                 logger.warning(f"Photo index empty (attempt {attempt}/{max_attempts})")
@@ -406,20 +435,6 @@ async def find_photos(product: str, color: str = "", max_photos: int = 6) -> lis
     return result
 
 
-async def download_drive_file(file_id: str) -> bytes:
-    """Скачать файл из Google Drive."""
-    def _download():
-        svc = _drive_service()
-        from io import BytesIO
-        from googleapiclient.http import MediaIoBaseDownload
-        request = svc.files().get_media(fileId=file_id)
-        buf = BytesIO()
-        downloader = MediaIoBaseDownload(buf, request)
-        done = False
-        while not done:
-            _, done = downloader.next_chunk()
-        return buf.getvalue()
-    return await asyncio.get_event_loop().run_in_executor(None, _download)
 
 
 # ── Telegram алерты ──────────────────────────────────────────

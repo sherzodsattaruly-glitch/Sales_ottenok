@@ -96,10 +96,13 @@ async def download_file(url: str) -> bytes:
 
 async def send_photos(chat_id: str, photos: list[dict]):
     """Send multiple photos. Each dict: {file_id, caption?, filename?}."""
-    from services import download_drive_file
+    from services import get_photo_bytes
     for photo in photos:
         try:
-            file_bytes = await download_drive_file(photo["file_id"])
+            file_bytes = get_photo_bytes(photo["file_id"])
+            if not file_bytes:
+                logger.warning(f"[{chat_id}] Photo not in cache: {photo.get('filename', photo['file_id'])}")
+                continue
             await send_image_by_upload(chat_id, file_bytes, photo.get("caption", ""), photo.get("filename", "photo.jpg"))
             await asyncio.sleep(0.5)
         except Exception as e:
