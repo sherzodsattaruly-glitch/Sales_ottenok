@@ -343,7 +343,13 @@ async def find_photos(product: str, color: str = "", max_photos: int = 6) -> lis
 
     # Собираем фото
     result = []
-    if len(matched) == 1 or matched[0][1] >= 3:
+    # Конкретный товар: 1 матч, точный матч, или один явный лидер по score
+    is_specific = (
+        len(matched) == 1
+        or matched[0][1] == 100
+        or (len(matched) >= 2 and matched[0][1] > matched[1][1])
+    )
+    if is_specific:
         # Конкретный товар — все его фото
         photos = index[matched[0][0]]
         if color_lower:
