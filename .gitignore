@@ -14,6 +14,8 @@ data/chroma_db/
 data/ottenok.db
 data/photo_index.json
 data/sales_ottenok.log
+data/bot.log
+data/agent_sessions.db
 
 # Media in chat exports (only .txt used by knowledge builder)
 data/knowledge_base/chats/**/*.mp4
