@@ -61,7 +61,12 @@ CATALOG_TTL = 300  # 5 мин
 
 
 async def get_catalog() -> list[dict]:
-    """Загрузить каталог товаров из Google Sheets. Кэш 5 мин."""
+    """Загрузить каталог товаров из Google Sheets. Кэш 5 мин.
+
+    Нормализует колонки Sheet → единый формат:
+      product_name, category, price, colors, description, sizes, quantity
+    Размеры агрегируются из отдельных колонок (35-42) с кол-вом > 0.
+    """
     global _catalog_cache, _catalog_cache_ts
     if _catalog_cache and (time.time() - _catalog_cache_ts) < CATALOG_TTL:
         return _catalog_cache
@@ -70,23 +75,77 @@ async def get_catalog() -> list[dict]:
         logger.warning("CATALOG_SHEETS_ID not set")
         return _catalog_cache
 
+    # Маппинг заголовков Sheet → нормализованные имена
+    _HEADER_MAP = {
+        "name": "product_name",
+        "название": "product_name",
+        "product_name": "product_name",
+        "category": "category",
+        "категория": "category",
+        "price": "price",
+        "цена": "price",
+        "colors": "colors",
+        "цвета": "colors",
+        "color": "colors",
+        "цвет": "colors",
+        "descriptions": "description",
+        "description": "description",
+        "описание": "description",
+        "sizes": "sizes",
+        "размеры": "sizes",
+        "quantity": "quantity",
+        "количество": "quantity",
+        "кол-во": "quantity",
+        "кол-во сумки": "bag_quantity",
+    }
+    # Колонки-размеры (числа = номера размеров обуви)
+    _SIZE_COLUMNS = {"35", "36", "37", "38", "39", "40", "41", "42", "43", "44"}
+
     try:
         def _load():
             svc = _sheets_service()
             result = svc.spreadsheets().values().get(
                 spreadsheetId=CATALOG_SHEETS_ID,
-                range="A:Z",  # все колонки
+                range="A:Z",
             ).execute()
             rows = result.get("values", [])
             if len(rows) < 2:
                 return []
-            headers = [h.strip().lower() for h in rows[0]]
+            raw_headers = [h.strip() for h in rows[0]]
             items = []
             for row in rows[1:]:
+                raw = {}
+                for i, h in enumerate(raw_headers):
+                    raw[h] = row[i].strip() if i < len(row) else ""
+
+                # Нормализуем поля
                 item = {}
-                for i, h in enumerate(headers):
-                    item[h] = row[i].strip() if i < len(row) else ""
-                if item.get("product_name") or item.get("название"):
+                size_avail = {}  # размер → кол-во
+                for h, val in raw.items():
+                    h_lower = h.lower()
+                    if h_lower in _SIZE_COLUMNS:
+                        try:
+                            qty = int(val) if val else 0
+                        except ValueError:
+                            qty = 0
+                        if qty > 0:
+                            size_avail[h_lower] = qty
+                    elif h_lower in _HEADER_MAP:
+                        item[_HEADER_MAP[h_lower]] = val
+
+                # Агрегируем размеры
+                if size_avail:
+                    item["sizes"] = ", ".join(sorted(size_avail.keys(), key=int))
+                    item["quantity"] = str(sum(size_avail.values()))
+                elif not item.get("sizes"):
+                    # Для сумок/аксессуаров — берём bag_quantity
+                    bag_qty = item.pop("bag_quantity", "0")
+                    item["sizes"] = ""
+                    if not item.get("quantity"):
+                        item["quantity"] = bag_qty
+                item.pop("bag_quantity", None)
+
+                if item.get("product_name"):
                     items.append(item)
             return items
 
@@ -105,12 +164,15 @@ def format_catalog_for_prompt(catalog: list[dict]) -> str:
         return "Каталог пуст — скажи клиенту, что сейчас уточнишь наличие."
     lines = []
     for item in catalog:
-        name = item.get("product_name") or item.get("название", "?")
-        price = item.get("price") or item.get("цена", "")
-        sizes = item.get("sizes") or item.get("размеры", "")
-        colors = item.get("colors") or item.get("цвета", "")
-        qty = item.get("quantity") or item.get("количество", "")
+        name = item.get("product_name", "?")
+        category = item.get("category", "")
+        price = item.get("price", "")
+        sizes = item.get("sizes", "")
+        colors = item.get("colors", "")
+        qty = item.get("quantity", "")
         line = f"- {name}"
+        if category:
+            line += f" ({category})"
         if price:
             line += f" | {price}"
         if sizes:
@@ -126,36 +188,45 @@ def format_catalog_for_prompt(catalog: list[dict]) -> str:
 # ── Проверка наличия ─────────────────────────────────────────
 
 async def check_stock(product: str, size: str = "", color: str = "") -> dict:
-    """Проверить наличие товара в каталоге."""
+    """Проверить наличие товара в каталоге.
+
+    Ищет по имени товара и категории (туфли, сумка, кроссовки и т.д.).
+    """
     catalog = await get_catalog()
     product_lower = product.lower()
     matches = []
     for item in catalog:
-        name = (item.get("product_name") or item.get("название", "")).lower()
-        if product_lower in name or name in product_lower:
+        name = item.get("product_name", "").lower()
+        category = item.get("category", "").lower()
+        # Поиск по имени или категории
+        if (product_lower in name or name in product_lower
+                or product_lower in category or category in product_lower):
             matches.append(item)
 
     if not matches:
         return {"available": False, "message": f"Товар '{product}' не найден в каталоге"}
 
-    # Фильтруем по размеру/цвету если указаны
+    # Собираем все подходящие варианты
+    available_items = []
     for item in matches:
-        item_sizes = (item.get("sizes") or item.get("размеры", "")).lower()
-        item_colors = (item.get("colors") or item.get("цвета", "")).lower()
-        item_qty = item.get("quantity") or item.get("количество", "0")
+        item_sizes = item.get("sizes", "").lower()
+        item_colors = item.get("colors", "").lower().strip()
+        item_qty = item.get("quantity", "0")
 
         size_ok = not size or size.lower() in item_sizes
         color_ok = not color or color.lower() in item_colors
         in_stock = str(item_qty).strip() not in ("0", "")
 
         if size_ok and color_ok and in_stock:
-            return {
-                "available": True,
-                "product": item.get("product_name") or item.get("название"),
-                "price": item.get("price") or item.get("цена", ""),
-                "sizes": item.get("sizes") or item.get("размеры", ""),
-                "colors": item.get("colors") or item.get("цвета", ""),
-            }
+            available_items.append({
+                "product": item.get("product_name"),
+                "price": item.get("price", ""),
+                "sizes": item.get("sizes", ""),
+                "colors": item.get("colors", ""),
+            })
+
+    if available_items:
+        return {"available": True, "items": available_items}
 
     return {"available": False, "message": f"Товар '{product}' в указанной комплектации отсутствует"}
 
@@ -168,7 +239,7 @@ PHOTO_INDEX_TTL = 1800  # 30 мин
 
 
 async def load_photo_index():
-    """Загрузить индекс фото из Google Drive."""
+    """Загрузить индекс фото из Google Drive. Retry до 3 раз при ошибках."""
     global _photo_index, _photo_index_ts
     if _photo_index and (time.time() - _photo_index_ts) < PHOTO_INDEX_TTL:
         return _photo_index
@@ -176,95 +247,125 @@ async def load_photo_index():
     if not GOOGLE_DRIVE_PHOTOS_FOLDER_ID:
         return _photo_index
 
-    try:
-        def _load():
-            svc = _drive_service()
-            # Сначала проверяем подпапки (продукт = папка)
-            folders = svc.files().list(
-                q=f"'{GOOGLE_DRIVE_PHOTOS_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder'",
-                fields="files(id, name)",
-                pageSize=200,
-            ).execute().get("files", [])
+    def _load():
+        svc = _drive_service()
+        # Сначала проверяем подпапки (продукт = папка)
+        folders = svc.files().list(
+            q=f"'{GOOGLE_DRIVE_PHOTOS_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder'",
+            fields="files(id, name)",
+            pageSize=200,
+        ).execute().get("files", [])
 
-            index = {}
+        index = {}
 
-            if folders:
-                # Структура: корневая/продукт_папка/фото.jpg
-                for folder in folders:
-                    photos = svc.files().list(
-                        q=f"'{folder['id']}' in parents and mimeType contains 'image/'",
-                        fields="files(id, name)",
-                        pageSize=50,
-                    ).execute().get("files", [])
-                    if photos:
-                        key = folder["name"].lower().strip()
-                        index[key] = [{"file_id": p["id"], "name": p["name"]} for p in photos]
-            else:
-                # Плоская структура: фото лежат прямо в корневой папке
-                # Группируем по имени продукта (убираем номер фото в конце)
-                # "Chanel балетки бежевые 1.jpg" → "chanel балетки бежевые"
-                images = svc.files().list(
-                    q=f"'{GOOGLE_DRIVE_PHOTOS_FOLDER_ID}' in parents and mimeType contains 'image/'",
+        if folders:
+            for folder in folders:
+                photos = svc.files().list(
+                    q=f"'{folder['id']}' in parents and mimeType contains 'image/'",
                     fields="files(id, name)",
-                    pageSize=500,
+                    pageSize=50,
                 ).execute().get("files", [])
-                for img in images:
-                    name = img["name"]
-                    # Убираем расширение и номер фото: "Product Name 1.jpg" → "product name"
-                    base = re.sub(r'\.\w+$', '', name)           # убрать .jpg/.png
-                    key = re.sub(r'\s+\d+$', '', base).lower().strip()  # убрать " 1"
-                    if key not in index:
-                        index[key] = []
-                    index[key].append({"file_id": img["id"], "name": name})
-            return index
+                if photos:
+                    key = folder["name"].lower().strip()
+                    index[key] = [{"file_id": p["id"], "name": p["name"]} for p in photos]
+        else:
+            # Плоская структура: "Chanel балетки бежевые 1.jpg" → "chanel балетки бежевые"
+            images = svc.files().list(
+                q=f"'{GOOGLE_DRIVE_PHOTOS_FOLDER_ID}' in parents and mimeType contains 'image/'",
+                fields="files(id, name)",
+                pageSize=500,
+            ).execute().get("files", [])
+            for img in images:
+                name = img["name"]
+                base = re.sub(r'\.\w+$', '', name)
+                key = re.sub(r'\s+\d+$', '', base).lower().strip()
+                if key not in index:
+                    index[key] = []
+                index[key].append({"file_id": img["id"], "name": name})
+        return index
 
-        _photo_index = await asyncio.get_event_loop().run_in_executor(None, _load)
-        _photo_index_ts = time.time()
-        logger.info(f"Photo index loaded: {len(_photo_index)} products")
-    except Exception as e:
-        logger.error(f"Failed to load photo index: {e}")
+    max_attempts = 3
+    for attempt in range(1, max_attempts + 1):
+        try:
+            result = await asyncio.get_event_loop().run_in_executor(None, _load)
+            if result:
+                _photo_index = result
+                _photo_index_ts = time.time()
+                logger.info(f"Photo index loaded: {len(_photo_index)} products")
+                return _photo_index
+            else:
+                logger.warning(f"Photo index empty (attempt {attempt}/{max_attempts})")
+                if attempt < max_attempts:
+                    await asyncio.sleep(2 * attempt)
+        except Exception as e:
+            logger.error(f"Failed to load photo index (attempt {attempt}/{max_attempts}): {e}")
+            if attempt < max_attempts:
+                await asyncio.sleep(2 * attempt)
 
+    logger.error("Photo index: all attempts failed, returning cached or empty")
     return _photo_index
 
 
 async def find_photos(product: str, color: str = "", max_photos: int = 6) -> list[dict]:
-    """Найти фото товара. Возвращает [{file_id, name, caption}]."""
+    """Найти фото товара. Возвращает [{file_id, filename, caption}].
+
+    Если запрос общий (например "туфли"), возвращает по 1 фото от каждого
+    подходящего товара. Если конкретный ("Chanel slingbacks"), возвращает
+    все фото этого товара.
+    """
     index = await load_photo_index()
     if not index:
         return []
 
     product_lower = product.lower().strip()
     color_lower = color.lower().strip() if color else ""
+    query_tokens = set(product_lower.split())
 
-    # Ищем папку по совпадению
-    best_key = None
-    best_score = 0
+    # Собираем все подходящие ключи с score
+    matched: list[tuple[str, int]] = []
     for key in index:
-        # Точное совпадение
         if product_lower == key:
-            best_key = key
-            break
-        # Частичное
-        if product_lower in key or key in product_lower:
-            score = len(set(product_lower.split()) & set(key.split()))
-            if score > best_score:
-                best_score = score
-                best_key = key
+            matched.append((key, 100))  # точное совпадение
+            continue
+        # Слово-в-слово overlap
+        key_tokens = set(key.split())
+        overlap = len(query_tokens & key_tokens)
+        if overlap > 0:
+            matched.append((key, overlap))
+        elif product_lower in key or key in product_lower:
+            matched.append((key, 1))
 
-    if not best_key:
+    if not matched:
         return []
 
-    photos = index[best_key]
+    # Сортируем по score desc
+    matched.sort(key=lambda x: x[1], reverse=True)
 
-    # Фильтруем по цвету если указан
-    if color_lower:
-        color_filtered = [p for p in photos if color_lower in p["name"].lower()]
-        if color_filtered:
-            photos = color_filtered
+    # Собираем фото
+    result = []
+    if len(matched) == 1 or matched[0][1] >= 3:
+        # Конкретный товар — все его фото
+        photos = index[matched[0][0]]
+        if color_lower:
+            filtered = [p for p in photos if color_lower in p["name"].lower()]
+            if filtered:
+                photos = filtered
+        for p in photos[:max_photos]:
+            result.append({"file_id": p["file_id"], "filename": p["name"], "caption": ""})
+    else:
+        # Общий запрос (туфли, сумки) — по 1 фото от каждого товара
+        for key, _ in matched:
+            photos = index[key]
+            if color_lower:
+                filtered = [p for p in photos if color_lower in p["name"].lower()]
+                if filtered:
+                    photos = filtered
+            if photos:
+                result.append({"file_id": photos[0]["file_id"], "filename": photos[0]["name"], "caption": ""})
+            if len(result) >= max_photos:
+                break
 
-    # Ограничиваем
-    photos = photos[:max_photos]
-    return [{"file_id": p["file_id"], "filename": p["name"], "caption": ""} for p in photos]
+    return result
 
 
 async def download_drive_file(file_id: str) -> bytes:
