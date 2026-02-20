@@ -3,7 +3,9 @@
 import asyncio
 import logging
 
-from config import MANAGER_CHAT_IDS, MESSAGE_AGGREGATION_DELAY
+import aiosqlite
+
+from config import MANAGER_CHAT_IDS, MESSAGE_AGGREGATION_DELAY, AGENT_SESSIONS_DB_PATH, SQLITE_DB_PATH
 from greenapi_client import send_text
 from services import notify_error
 import db
@@ -21,7 +23,7 @@ def _is_manager_command(chat_id: str, text: str) -> bool:
     if chat_id not in MANAGER_CHAT_IDS:
         return False
     t = text.strip().lower()
-    return t.startswith("/handoff") or t.startswith("/bot ")
+    return t.startswith("/handoff") or t.startswith("/bot ") or t.startswith("/reset")
 
 
 async def handle_message(chat_id: str, sender_name: str, text: str):
@@ -136,6 +138,38 @@ async def _handle_manager_command(chat_id: str, text: str):
         elif action == "off":
             await db.set_handoff(target, True)
             await send_text(chat_id, f"✅ Бот выключен для {target}")
+
+    elif cmd == "/reset":
+        # /reset <phone> — очистить сессию (LLM-контекст + sent_photos)
+        # /reset all — очистить все сессии
+        target = parts[1] if len(parts) >= 2 else ""
+
+        if target.lower() == "all":
+            async with aiosqlite.connect(AGENT_SESSIONS_DB_PATH) as sdb:
+                await sdb.execute("DELETE FROM agent_messages")
+                await sdb.execute("DELETE FROM agent_sessions")
+                await sdb.commit()
+            async with aiosqlite.connect(SQLITE_DB_PATH) as sdb:
+                await sdb.execute("DELETE FROM sent_photos")
+                await sdb.commit()
+            await send_text(chat_id, "✅ Все сессии очищены")
+            logger.info("Manager reset ALL sessions")
+
+        elif target:
+            if "@c.us" not in target:
+                target = f"{target}@c.us"
+            async with aiosqlite.connect(AGENT_SESSIONS_DB_PATH) as sdb:
+                await sdb.execute("DELETE FROM agent_messages WHERE session_id = ?", (target,))
+                await sdb.execute("DELETE FROM agent_sessions WHERE session_id = ?", (target,))
+                await sdb.commit()
+            async with aiosqlite.connect(SQLITE_DB_PATH) as sdb:
+                await sdb.execute("DELETE FROM sent_photos WHERE chat_id = ?", (target,))
+                await sdb.commit()
+            await send_text(chat_id, f"✅ Сессия очищена для {target}")
+            logger.info(f"Manager reset session for {target}")
+
+        else:
+            await send_text(chat_id, "Формат: /reset <номер> или /reset all")
 
 
 async def handle_outgoing_message(body: dict):
