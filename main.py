@@ -1,5 +1,7 @@
 """Sales Ottenok v2 — точка входа. FastAPI + polling + nudge."""
 
+from __future__ import annotations
+
 import logging
 from logging.handlers import RotatingFileHandler
 import asyncio
@@ -170,7 +172,8 @@ async def poll_loop(interval: float):
 
             try:
                 payload = WebhookPayload(**body)
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Payload parse error (poll): {e}")
                 if receipt_id is not None:
                     await delete_notification(receipt_id)
                 continue
@@ -269,7 +272,8 @@ async def webhook(request: Request):
 
     try:
         payload = WebhookPayload(**body)
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Payload parse error (webhook): {e}")
         return Response(status_code=200)
 
     if not payload.senderData or not payload.messageData:

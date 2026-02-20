@@ -11,7 +11,7 @@ import ai
 
 logger = logging.getLogger(__name__)
 
-_chat_locks: dict[str, asyncio.Lock] = {}
+_chat_locks: dict[str, asyncio.Lock] = {}  # TODO: WeakValueDictionary не работает с Lock (нет weak ref), используем обычный dict
 _message_buffers: dict[str, list[str]] = {}
 _buffer_sender: dict[str, str] = {}
 _buffer_timers: dict[str, asyncio.Task] = {}

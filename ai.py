@@ -1,85 +1,113 @@
-"""AI engine — GPT-4o с function calling. Вся логика продаж в промпте."""
+"""AI engine — OpenAI Agents SDK. Вся логика продаж в промпте, tools через декораторы."""
+
+from __future__ import annotations
 
 import json
 import logging
-from openai import AsyncOpenAI
+from dataclasses import dataclass
 
-from config import OPENAI_API_KEY, OPENAI_MODEL
+from openai import AsyncOpenAI
+from agents import (
+    Agent,
+    ModelSettings,
+    Runner,
+    RunContextWrapper,
+    SQLiteSession,
+    function_tool,
+    handoff,
+    trace,
+)
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+from config import (
+    OPENAI_API_KEY,
+    OPENAI_MODEL,
+    OPENAI_TEMPERATURE,
+    OPENAI_MAX_TOKENS,
+    AGENT_MAX_TURNS,
+    AGENT_SESSIONS_DB_PATH,
+)
 import db
 import services
-from greenapi_client import send_text, send_photos
+from greenapi_client import send_photos
 
 logger = logging.getLogger(__name__)
 
-client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+# OpenAI client для Whisper (Agents SDK не покрывает audio)
+_openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
-# ── Tools (function calling) ─────────────────────────────────
 
-TOOLS = [
-    {
-        "type": "function",
-        "function": {
-            "name": "check_stock",
-            "description": "Проверить наличие товара в каталоге. Вызови перед оформлением заказа.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "product": {"type": "string", "description": "Название товара"},
-                    "size": {"type": "string", "description": "Размер (если известен)"},
-                    "color": {"type": "string", "description": "Цвет (если известен)"},
-                },
-                "required": ["product"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_photos",
-            "description": "Найти и отправить фото товара клиенту. Вызови когда клиент спрашивает 'покажите', 'какие есть', или при первом упоминании товара.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "product": {"type": "string", "description": "Название товара"},
-                    "color": {"type": "string", "description": "Цвет (если указан)"},
-                },
-                "required": ["product"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "submit_order",
-            "description": "Оформить заказ. Вызови ТОЛЬКО когда собраны ВСЕ данные: товар, размер (для обуви), цвет, город, адрес. Клиент должен подтвердить.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "product": {"type": "string"},
-                    "size": {"type": "string", "description": "Размер (пустая строка для сумок)"},
-                    "color": {"type": "string"},
-                    "city": {"type": "string"},
-                    "address": {"type": "string", "description": "Адрес доставки"},
-                },
-                "required": ["product", "city"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "handoff_to_manager",
-            "description": "Передать диалог менеджеру. Вызови если: сложный случай, жалоба, возврат, или не можешь помочь.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "reason": {"type": "string", "description": "Причина передачи"},
-                },
-                "required": ["reason"],
-            },
-        },
-    },
-]
+# ── Context ──────────────────────────────────────────────────
+
+@dataclass
+class ChatContext:
+    chat_id: str
+    sender_name: str = ""
+
+
+# ── Tools ────────────────────────────────────────────────────
+
+@function_tool
+async def check_stock(
+    ctx: RunContextWrapper[ChatContext],
+    product: str,
+    size: str = "",
+    color: str = "",
+) -> str:
+    """Проверить наличие товара в каталоге. Вызови перед оформлением заказа."""
+    chat_id = ctx.context.chat_id
+    logger.info(f"[{chat_id}] Tool: check_stock(product={product}, size={size}, color={color})")
+    result = await services.check_stock(product, size, color)
+    return json.dumps(result, ensure_ascii=False)
+
+
+@function_tool
+async def get_photos(
+    ctx: RunContextWrapper[ChatContext],
+    product: str,
+    color: str = "",
+) -> str:
+    """Найти и отправить фото товара клиенту. Вызови когда клиент спрашивает 'покажите', 'какие есть', или при первом упоминании товара."""
+    chat_id = ctx.context.chat_id
+    product_key = f"{product}_{color}".lower().strip("_")
+    logger.info(f"[{chat_id}] Tool: get_photos(product={product}, color={color})")
+
+    if await db.has_sent_photos(chat_id, product_key):
+        return json.dumps({"sent": False, "reason": "Фото этого товара уже отправлялись клиенту"})
+
+    photos = await services.find_photos(product, color)
+    if photos:
+        await send_photos(chat_id, photos)
+        await db.mark_photos_sent(chat_id, product_key)
+        return json.dumps({"sent": True, "count": len(photos)})
+    return json.dumps({"sent": False, "reason": "Фото не найдены"})
+
+
+@function_tool
+async def submit_order(
+    ctx: RunContextWrapper[ChatContext],
+    product: str,
+    city: str,
+    size: str = "",
+    color: str = "",
+    address: str = "",
+) -> str:
+    """Оформить заказ. Вызови ТОЛЬКО когда собраны ВСЕ данные: товар, размер (для обуви), цвет, город, адрес. Клиент должен подтвердить."""
+    chat_id = ctx.context.chat_id
+    logger.info(f"[{chat_id}] Tool: submit_order(product={product}, city={city})")
+    order = {
+        "product": product,
+        "size": size,
+        "color": color,
+        "city": city,
+        "address": address,
+        "client_phone": chat_id.replace("@c.us", ""),
+    }
+    await db.save_order_state(chat_id, order)
+    await services.notify_order(order)
+    await services.send_order_to_n8n(order)
+    return json.dumps({"success": True, "order": order}, ensure_ascii=False)
+
 
 # ── System Prompt ────────────────────────────────────────────
 
@@ -144,120 +172,88 @@ SYSTEM_PROMPT_TEMPLATE = """Ты — Алина, менеджер по прод�
 """
 
 
-# ── Tool execution ───────────────────────────────────────────
+# ── Dynamic instructions ─────────────────────────────────────
 
-async def execute_tool(chat_id: str, name: str, args: dict) -> str:
-    """Выполнить tool call и вернуть результат."""
-    logger.info(f"[{chat_id}] Tool: {name}({json.dumps(args, ensure_ascii=False)[:200]})")
+async def _build_instructions(
+    ctx: RunContextWrapper[ChatContext],
+    agent: Agent[ChatContext],
+) -> str:
+    """Подставляет актуальный каталог в system prompt."""
+    catalog = await services.get_catalog()
+    catalog_text = services.format_catalog_for_prompt(catalog)
+    return SYSTEM_PROMPT_TEMPLATE.format(catalog=catalog_text)
 
-    if name == "check_stock":
-        result = await services.check_stock(
-            args.get("product", ""),
-            args.get("size", ""),
-            args.get("color", ""),
-        )
-        return json.dumps(result, ensure_ascii=False)
 
-    elif name == "get_photos":
-        product = args.get("product", "")
-        color = args.get("color", "")
-        product_key = f"{product}_{color}".lower().strip("_")
+# ── Agents ───────────────────────────────────────────────────
 
-        # Проверяем, не отправляли ли уже
-        if await db.has_sent_photos(chat_id, product_key):
-            return json.dumps({"sent": False, "reason": "Фото этого товара уже отправлялись клиенту"})
+manager_agent = Agent[ChatContext](
+    name="Manager",
+    instructions="Скажи клиенту что менеджер скоро свяжется. Отвечай коротко, на русском.",
+    model=OPENAI_MODEL,
+)
 
-        photos = await services.find_photos(product, color)
-        if photos:
-            await send_photos(chat_id, photos)
-            await db.mark_photos_sent(chat_id, product_key)
-            return json.dumps({"sent": True, "count": len(photos)})
-        else:
-            return json.dumps({"sent": False, "reason": "Фото не найдены"})
 
-    elif name == "submit_order":
-        order = {
-            "product": args.get("product", ""),
-            "size": args.get("size", ""),
-            "color": args.get("color", ""),
-            "city": args.get("city", ""),
-            "address": args.get("address", ""),
-            "client_phone": chat_id.replace("@c.us", ""),
-        }
-        await db.save_order_state(chat_id, order)
-        await services.notify_order(order)
-        await services.send_order_to_n8n(order)
-        return json.dumps({"success": True, "order": order}, ensure_ascii=False)
+async def _on_handoff_to_manager(ctx: RunContextWrapper[ChatContext]):
+    """Callback при передаче диалога менеджеру."""
+    chat_id = ctx.context.chat_id
+    await db.set_handoff(chat_id, True)
+    await services.notify_error("handoff", f"chat_id={chat_id}")
+    logger.info(f"[{chat_id}] Handoff to manager activated")
 
-    elif name == "handoff_to_manager":
-        await db.set_handoff(chat_id, True)
-        reason = args.get("reason", "")
-        await services.notify_error("handoff", f"chat_id={chat_id} reason={reason}")
-        return json.dumps({"success": True, "message": "Диалог передан менеджеру"})
 
-    return json.dumps({"error": f"Unknown tool: {name}"})
+alina = Agent[ChatContext](
+    name="Алина",
+    instructions=_build_instructions,
+    model=OPENAI_MODEL,
+    model_settings=ModelSettings(temperature=OPENAI_TEMPERATURE, max_tokens=OPENAI_MAX_TOKENS),
+    tools=[check_stock, get_photos, submit_order],
+    handoffs=[
+        handoff(
+            agent=manager_agent,
+            on_handoff=_on_handoff_to_manager,
+            tool_name_override="handoff_to_manager",
+            tool_description_override="Передать диалог менеджеру. Вызови если: сложный случай, жалоба, возврат, или не можешь помочь.",
+        ),
+    ],
+)
 
 
 # ── Main generate ────────────────────────────────────────────
 
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
+async def _run_agent(agent, user_text, context, session):
+    """Запуск агента с retry на ошибки API."""
+    return await Runner.run(
+        agent,
+        input=user_text,
+        context=context,
+        session=session,
+        max_turns=AGENT_MAX_TURNS,
+    )
+
+
 async def generate_response(chat_id: str, user_text: str, sender_name: str = "") -> str:
     """Сгенерировать ответ на сообщение клиента. Возвращает текст (разделённый |||)."""
+    context = ChatContext(chat_id=chat_id, sender_name=sender_name)
+    session = SQLiteSession(session_id=chat_id, db_path=AGENT_SESSIONS_DB_PATH)
 
-    # Сохраняем сообщение
+    # Сохраняем user message для аналитики/nudge (session хранит для LLM отдельно)
     await db.save_message(chat_id, "user", user_text, sender_name)
 
-    # Загружаем историю
-    history = await db.get_history(chat_id)
+    with trace("Sales Bot", group_id=chat_id):
+        try:
+            result = await _run_agent(alina, user_text, context, session)
+            response = result.final_output or ""
 
-    # Каталог для промпта
-    catalog = await services.get_catalog()
-    catalog_text = services.format_catalog_for_prompt(catalog)
-    system_prompt = SYSTEM_PROMPT_TEMPLATE.format(catalog=catalog_text)
+            if response:
+                await db.save_message(chat_id, "assistant", response)
 
-    # Формируем messages
-    messages = [{"role": "system", "content": system_prompt}]
-    for msg in history:
-        messages.append({"role": msg["role"], "content": msg["content"]})
-
-    # Цикл tool calling (максимум 5 итераций)
-    for _ in range(5):
-        response = await client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=messages,
-            tools=TOOLS,
-            tool_choice="auto",
-            temperature=0.7,
-            max_tokens=1000,
-        )
-
-        choice = response.choices[0]
-
-        # Если есть tool calls — выполняем
-        if choice.message.tool_calls:
-            messages.append(choice.message)
-            for tc in choice.message.tool_calls:
-                try:
-                    args = json.loads(tc.function.arguments)
-                except json.JSONDecodeError:
-                    args = {}
-                result = await execute_tool(chat_id, tc.function.name, args)
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tc.id,
-                    "content": result,
-                })
-            continue
-
-        # Готовый ответ
-        assistant_text = choice.message.content or ""
-        if assistant_text:
-            await db.save_message(chat_id, "assistant", assistant_text)
-        return assistant_text
-
-    # Fallback
-    fallback = "Извините, произошла ошибка. Наш менеджер скоро с вами свяжется!"
-    await db.save_message(chat_id, "assistant", fallback)
-    return fallback
+            return response
+        except Exception as e:
+            logger.error(f"[{chat_id}] Agent error: {e}", exc_info=True)
+            fallback = "Извините, произошла ошибка. Наш менеджер скоро с вами свяжется!"
+            await db.save_message(chat_id, "assistant", fallback)
+            return fallback
 
 
 # ── Whisper (voice) ──────────────────────────────────────────
@@ -274,7 +270,7 @@ async def transcribe_voice(audio_bytes: bytes, mime_type: str = "audio/ogg") -> 
     buf = BytesIO(audio_bytes)
     buf.name = f"voice.{ext}"
 
-    response = await client.audio.transcriptions.create(
+    response = await _openai_client.audio.transcriptions.create(
         model="whisper-1",
         file=buf,
         language="ru",

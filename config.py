@@ -34,6 +34,12 @@ WEBHOOK_PORT = int(os.getenv("WEBHOOK_PORT", "8080"))
 MAX_CONVERSATION_HISTORY = int(os.getenv("MAX_CONVERSATION_HISTORY", "20"))
 MESSAGE_AGGREGATION_DELAY = float(os.getenv("MESSAGE_AGGREGATION_DELAY", "3.0"))
 
+# OpenAI Agents SDK
+OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.4"))
+OPENAI_MAX_TOKENS = int(os.getenv("OPENAI_MAX_TOKENS", "1500"))
+AGENT_MAX_TURNS = int(os.getenv("AGENT_MAX_TURNS", "5"))
+AGENT_SESSIONS_DB_PATH = os.getenv("AGENT_SESSIONS_DB_PATH", "data/agent_sessions.db")
+
 # Manager
 def _normalize_chat_id(value: str) -> str:
     v = (value or "").strip()

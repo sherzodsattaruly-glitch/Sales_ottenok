@@ -1,5 +1,7 @@
 """SQLite — история, состояние клиентов, заказы."""
 
+from __future__ import annotations
+
 import sqlite3
 import json
 import aiosqlite
