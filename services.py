@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import re
 import time
 import json
 from functools import lru_cache
@@ -178,7 +179,7 @@ async def load_photo_index():
     try:
         def _load():
             svc = _drive_service()
-            # Получаем все папки (= продукты) в корневой папке фото
+            # Сначала проверяем подпапки (продукт = папка)
             folders = svc.files().list(
                 q=f"'{GOOGLE_DRIVE_PHOTOS_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder'",
                 fields="files(id, name)",
@@ -186,16 +187,35 @@ async def load_photo_index():
             ).execute().get("files", [])
 
             index = {}
-            for folder in folders:
-                # Получаем фото в каждой папке
-                photos = svc.files().list(
-                    q=f"'{folder['id']}' in parents and mimeType contains 'image/'",
+
+            if folders:
+                # Структура: корневая/продукт_папка/фото.jpg
+                for folder in folders:
+                    photos = svc.files().list(
+                        q=f"'{folder['id']}' in parents and mimeType contains 'image/'",
+                        fields="files(id, name)",
+                        pageSize=50,
+                    ).execute().get("files", [])
+                    if photos:
+                        key = folder["name"].lower().strip()
+                        index[key] = [{"file_id": p["id"], "name": p["name"]} for p in photos]
+            else:
+                # Плоская структура: фото лежат прямо в корневой папке
+                # Группируем по имени продукта (убираем номер фото в конце)
+                # "Chanel балетки бежевые 1.jpg" → "chanel балетки бежевые"
+                images = svc.files().list(
+                    q=f"'{GOOGLE_DRIVE_PHOTOS_FOLDER_ID}' in parents and mimeType contains 'image/'",
                     fields="files(id, name)",
-                    pageSize=50,
+                    pageSize=500,
                 ).execute().get("files", [])
-                if photos:
-                    key = folder["name"].lower().strip()
-                    index[key] = [{"file_id": p["id"], "name": p["name"]} for p in photos]
+                for img in images:
+                    name = img["name"]
+                    # Убираем расширение и номер фото: "Product Name 1.jpg" → "product name"
+                    base = re.sub(r'\.\w+$', '', name)           # убрать .jpg/.png
+                    key = re.sub(r'\s+\d+$', '', base).lower().strip()  # убрать " 1"
+                    if key not in index:
+                        index[key] = []
+                    index[key].append({"file_id": img["id"], "name": name})
             return index
 
         _photo_index = await asyncio.get_event_loop().run_in_executor(None, _load)
