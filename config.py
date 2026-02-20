@@ -57,6 +57,9 @@ MANAGER_CHAT_IDS = {cid for cid in (_normalize_chat_id(x) for x in _manager_raw.
 TELEGRAM_ALERT_BOT_TOKEN = os.getenv("TELEGRAM_ALERT_BOT_TOKEN", "")
 TELEGRAM_ALERT_CHAT_ID = os.getenv("TELEGRAM_ALERT_CHAT_ID", "")
 
+# WhatsApp group for order notifications (format: 120363XXXXXXXXXX@g.us)
+ORDER_GROUP_CHAT_ID = os.getenv("ORDER_GROUP_CHAT_ID", "")
+
 # N8N
 N8N_ORDER_WEBHOOK_URL = os.getenv("N8N_ORDER_WEBHOOK_URL", "")
 

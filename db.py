@@ -136,22 +136,25 @@ async def set_handoff(chat_id: str, enabled: bool):
         await db.commit()
 
 
-async def mark_photos_sent(chat_id: str, product_key: str):
+async def mark_photos_sent(chat_id: str, file_ids: list[str]):
+    """Пометить file_id как отправленные клиенту."""
     async with aiosqlite.connect(SQLITE_DB_PATH) as db:
-        await db.execute(
+        await db.executemany(
             "INSERT OR IGNORE INTO sent_photos (chat_id, product_key) VALUES (?, ?)",
-            (chat_id, product_key),
+            [(chat_id, fid) for fid in file_ids],
         )
         await db.commit()
 
 
-async def has_sent_photos(chat_id: str, product_key: str) -> bool:
+async def get_sent_photo_ids(chat_id: str) -> set[str]:
+    """Получить все file_id, которые уже отправлялись клиенту."""
     async with aiosqlite.connect(SQLITE_DB_PATH) as db:
         cur = await db.execute(
-            "SELECT 1 FROM sent_photos WHERE chat_id = ? AND product_key = ?",
-            (chat_id, product_key),
+            "SELECT product_key FROM sent_photos WHERE chat_id = ?",
+            (chat_id,),
         )
-        return (await cur.fetchone()) is not None
+        rows = await cur.fetchall()
+        return {r[0] for r in rows}
 
 
 async def get_nudge_candidates() -> list[dict]:

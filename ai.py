@@ -70,19 +70,23 @@ async def get_photos(
     """Найти и отправить фото товара клиенту. Вызови когда клиент спрашивает 'покажите', 'какие есть', или при первом упоминании товара.
     ВАЖНО: ВСЕГДА вызывай этот инструмент заново при каждом запросе клиента, даже если ранее фото не были найдены — ассортимент и фото обновляются."""
     chat_id = ctx.context.chat_id
-    product_key = f"{product}_{color}".lower().strip("_")
     logger.info(f"[{chat_id}] Tool: get_photos(product={product}, color={color})")
 
-    if await db.has_sent_photos(chat_id, product_key):
+    photos = await services.find_photos(product, color)
+    if not photos:
+        return json.dumps({"sent": False, "reason": "Фото не найдены"})
+
+    # Фильтруем уже отправленные фото по file_id
+    already_sent = await db.get_sent_photo_ids(chat_id)
+    new_photos = [p for p in photos if p["file_id"] not in already_sent]
+
+    if not new_photos:
         return json.dumps({"sent": False, "reason": "Фото этого товара уже отправлялись клиенту"})
 
-    photos = await services.find_photos(product, color)
-    if photos:
-        await send_photos(chat_id, photos)
-        await db.mark_photos_sent(chat_id, product_key)
-        captions = [p["caption"] for p in photos if p.get("caption")]
-        return json.dumps({"sent": True, "count": len(photos), "captions": captions}, ensure_ascii=False)
-    return json.dumps({"sent": False, "reason": "Фото не найдены"})
+    await send_photos(chat_id, new_photos)
+    await db.mark_photos_sent(chat_id, [p["file_id"] for p in new_photos])
+    captions = [p["caption"] for p in new_photos if p.get("caption")]
+    return json.dumps({"sent": True, "count": len(new_photos), "captions": captions}, ensure_ascii=False)
 
 
 @function_tool
@@ -107,6 +111,7 @@ async def submit_order(
     }
     await db.save_order_state(chat_id, order)
     await services.notify_order(order)
+    await services.notify_order_whatsapp(order)
     await services.send_order_to_n8n(order)
     return json.dumps({"success": True, "order": order}, ensure_ascii=False)
 

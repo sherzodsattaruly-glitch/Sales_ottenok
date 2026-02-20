@@ -16,6 +16,7 @@ from config import (
     TELEGRAM_ALERT_BOT_TOKEN,
     TELEGRAM_ALERT_CHAT_ID,
     N8N_ORDER_WEBHOOK_URL,
+    ORDER_GROUP_CHAT_ID,
 )
 
 logger = logging.getLogger(__name__)
@@ -479,6 +480,27 @@ async def notify_order(order: dict):
                 )
         except Exception as e:
             logger.warning(f"Order notification failed: {e}")
+
+
+async def notify_order_whatsapp(order: dict):
+    """Отправить сводку заказа в WhatsApp-группу менеджеров."""
+    if not ORDER_GROUP_CHAT_ID:
+        return
+    from greenapi_client import send_text
+    text = (
+        f"🛍 Новый заказ!\n\n"
+        f"Товар: {order.get('product', '?')}\n"
+        f"Размер: {order.get('size', '-')}\n"
+        f"Цвет: {order.get('color', '-')}\n"
+        f"Город: {order.get('city', '?')}\n"
+        f"Адрес: {order.get('address', '?')}\n"
+        f"Телефон клиента: {order.get('client_phone', '?')}"
+    )
+    try:
+        await send_text(ORDER_GROUP_CHAT_ID, text)
+        logger.info(f"Order sent to WhatsApp group: {order.get('product')}")
+    except Exception as e:
+        logger.error(f"WhatsApp group notification failed: {e}")
 
 
 # ── N8N webhook ──────────────────────────────────────────────
