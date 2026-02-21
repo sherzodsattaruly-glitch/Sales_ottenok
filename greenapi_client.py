@@ -87,8 +87,9 @@ async def delete_notification(receipt_id: int) -> dict:
     return r.json()
 
 
+@_retry(delay=2.0)
 async def download_file(url: str) -> bytes:
-    client = _get_client()
+    client = _get_client(timeout=30)
     r = await client.get(url)
     r.raise_for_status()
     return r.content
