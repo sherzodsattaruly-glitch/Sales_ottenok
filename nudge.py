@@ -6,14 +6,16 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 
+from agents import SQLiteSession
+
 import db
 from greenapi_client import send_text
-from config import NUDGE_ENABLED, NUDGE_CHECK_INTERVAL_MINUTES
+from config import NUDGE_ENABLED, NUDGE_CHECK_INTERVAL_MINUTES, AGENT_SESSIONS_DB_PATH
 
 logger = logging.getLogger(__name__)
 
-WORK_HOURS = (9, 22)  # с 9:00 до 22:00
-NUDGE_DELAY_FIRST = timedelta(hours=3)
+WORK_HOURS = (10, 22)  # с 10:00 до 22:00
+NUDGE_DELAY_FIRST = timedelta(hours=1)
 
 NUDGE_MESSAGES = {
     1: "Хотела уточнить, актуальна ли модель? Если есть вопросы — с радостью подскажу",
@@ -51,12 +53,13 @@ async def check_and_send_nudges():
             continue
 
         if nudge_count == 0:
-            # Первый дожим: через 3 часа
+            # Первый дожим: через 1 час (отправится только в рабочее время 10-22)
             if now - last_bot_at >= NUDGE_DELAY_FIRST:
                 await _send_nudge(chat_id, 1)
         elif nudge_count == 1:
-            # Второй дожим: на следующий день в 13:00
-            next_day_13 = (last_bot_at + timedelta(days=1)).replace(hour=13, minute=0, second=0, microsecond=0)
+            # Второй дожим: на следующий день в 13:00 от момента 1-го дожима
+            nudge1_at = _parse_ts(c.get("last_nudge_at")) or last_bot_at
+            next_day_13 = (nudge1_at + timedelta(days=1)).replace(hour=13, minute=0, second=0, microsecond=0)
             if now >= next_day_13:
                 await _send_nudge(chat_id, 2)
 
@@ -69,6 +72,9 @@ async def _send_nudge(chat_id: str, nudge_num: int):
     try:
         await send_text(chat_id, text)
         await db.save_message(chat_id, "assistant", text)
+        # Сохраняем дожим в agent session, чтобы LLM видел его в истории
+        session = SQLiteSession(session_id=chat_id, db_path=AGENT_SESSIONS_DB_PATH)
+        await session.add_items([{"role": "assistant", "content": text}])
         await db.update_client(chat_id, nudge_count=nudge_num, last_nudge_at=datetime.now().isoformat())
         logger.info(f"[{chat_id}] Sent nudge #{nudge_num}")
     except Exception as e:

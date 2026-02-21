@@ -343,8 +343,37 @@ async def load_photo_index():
     return _photo_index
 
 
-def _make_photo_caption(product_key: str, catalog: list[dict]) -> str:
-    """Сформировать подпись к фото: только название товара, без цены."""
+_RUSSIAN_COLORS = {
+    "черная", "черные", "чёрная", "чёрные", "черный",
+    "белая", "белые", "белый",
+    "бежевая", "бежевые", "бежевый",
+    "розовая", "розовые", "розовый",
+    "красная", "красные", "красный",
+    "синяя", "синие", "синий",
+    "голубая", "голубые", "голубой",
+    "серая", "серые", "серый",
+    "зеленая", "зеленые",
+    "коричневая", "коричневые",
+    "бордовая", "бордовые",
+    "серебряная", "серебряные", "серебристая", "серебристые",
+    "золотая", "золотые", "золотистая", "золотистые",
+    "молочная", "молочные",
+    "пудровая", "пудровые",
+    "нюдовая", "нюдовые",
+}
+
+
+def _extract_color_from_filename(filename: str) -> str:
+    """Извлечь русское слово цвета из имени файла фото."""
+    base = re.sub(r'\.\w+$', '', filename)
+    for word in base.lower().split():
+        if word in _RUSSIAN_COLORS:
+            return word
+    return ""
+
+
+def _make_photo_caption(product_key: str, catalog: list[dict], color: str = "") -> str:
+    """Сформировать подпись к фото: название товара + цвет."""
     display_name = product_key.title()
 
     # Поиск названия в каталоге по пересечению токенов
@@ -358,6 +387,8 @@ def _make_photo_caption(product_key: str, catalog: list[dict]) -> str:
             best_overlap = overlap
             display_name = item.get("product_name", display_name)
 
+    if color:
+        return f"{display_name}, {color}"
     return display_name
 
 
@@ -413,19 +444,19 @@ async def find_photos(product: str, color: str = "", max_photos: int = 6) -> lis
         or (len(matched) >= 2 and matched[0][1] > matched[1][1])
     )
     if is_specific:
-        # Конкретный товар — все его фото (одна подпись для всех)
+        # Конкретный товар — все его фото с цветом из имени файла
         key = matched[0][0]
         photos = index[key]
         if color_lower:
             filtered = [p for p in photos if color_lower in p["name"].lower()]
             if filtered:
                 photos = filtered
-        caption = _make_photo_caption(key, catalog)
         for p in photos[:max_photos]:
+            photo_color = _extract_color_from_filename(p["name"])
+            caption = _make_photo_caption(key, catalog, photo_color)
             result.append({"file_id": p["file_id"], "filename": p["name"], "caption": caption})
     else:
-        # Общий запрос (туфли, сумки) — по 1 фото от каждого товара с нумерацией
-        num = 0
+        # Общий запрос (туфли, сумки) — по 1 фото от каждого товара с цветом
         for key, _ in matched:
             photos = index[key]
             if color_lower:
@@ -433,10 +464,9 @@ async def find_photos(product: str, color: str = "", max_photos: int = 6) -> lis
                 if filtered:
                     photos = filtered
             if photos:
-                num += 1
-                caption = _make_photo_caption(key, catalog)
-                numbered_caption = f"{num}. {caption}"
-                result.append({"file_id": photos[0]["file_id"], "filename": photos[0]["name"], "caption": numbered_caption})
+                photo_color = _extract_color_from_filename(photos[0]["name"])
+                caption = _make_photo_caption(key, catalog, photo_color)
+                result.append({"file_id": photos[0]["file_id"], "filename": photos[0]["name"], "caption": caption})
             if len(result) >= max_photos:
                 break
 
