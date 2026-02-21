@@ -292,22 +292,40 @@ async def _run_agent(agent, input_content, context, session):
     )
 
 
-def _build_multimodal_input(user_text: str, image_data: bytes) -> list[dict]:
-    """Формирует мультимодальный input (текст + изображение) для Runner.
+async def _describe_image(image_data: bytes, user_text: str) -> str:
+    """Анализирует фото через GPT Vision и возвращает текстовое описание товара.
 
-    Responses API ожидает message-обёртку с content-массивом внутри.
+    Отдельный вызов, чтобы base64 не сохранялся в сессию агента
+    (иначе раздувает БД и токены при каждом последующем запросе).
     """
     b64 = base64.b64encode(image_data).decode()
-    return [
-        {
-            "role": "user",
-            "type": "message",
-            "content": [
-                {"type": "input_text", "text": user_text},
-                {"type": "input_image", "image_url": f"data:image/jpeg;base64,{b64}"},
-            ],
-        }
-    ]
+    response = await _openai_client.chat.completions.create(
+        model=OPENAI_MODEL,
+        max_tokens=300,
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": (
+                            "Ты помогаешь менеджеру магазина женской обуви и аксессуаров люкс-класса. "
+                            "Клиент прислал это фото. Опиши товар на фото коротко: "
+                            "тип (обувь/сумка/аксессуар), бренд (если видно), цвет, модель, "
+                            "любые заметные детали. Если на фото не товар — скажи что видишь. "
+                            "Отвечай на русском, 1-2 предложения."
+                            + (f"\nПодпись клиента: {user_text}" if user_text and user_text != "Клиент отправил фото" else "")
+                        ),
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{b64}", "detail": "low"},
+                    },
+                ],
+            }
+        ],
+    )
+    return response.choices[0].message.content or ""
 
 
 async def generate_response(
@@ -320,23 +338,28 @@ async def generate_response(
     context = ChatContext(chat_id=chat_id, sender_name=sender_name)
     session = SQLiteSession(session_id=chat_id, db_path=AGENT_SESSIONS_DB_PATH)
 
+    # Vision: анализируем фото отдельным вызовом, передаём описание как текст
+    if image_data:
+        logger.info(f"[{chat_id}] [Vision] Analyzing image ({len(image_data)} bytes)")
+        try:
+            description = await _describe_image(image_data, user_text)
+            logger.info(f"[{chat_id}] [Vision] Description: {description[:150]}")
+            user_text = f"[Клиент прислал фото: {description}]"
+            if user_text.strip() == "[Клиент прислал фото: ]":
+                user_text = "Клиент отправил фото, но не удалось его распознать"
+        except Exception as e:
+            logger.error(f"[{chat_id}] [Vision] Image analysis failed: {e}", exc_info=True)
+            user_text = "Клиент отправил фото (не удалось распознать изображение)"
+
     # Сохраняем user message для аналитики/nudge (session хранит для LLM отдельно)
     await db.save_message(chat_id, "user", user_text, sender_name)
 
-    # Мультимодальный input для Vision
-    if image_data:
-        input_content = _build_multimodal_input(user_text, image_data)
-        logger.info(f"[{chat_id}] [Vision] Sending image to agent ({len(image_data)} bytes), text: {user_text[:80]}")
-    else:
-        input_content = user_text
+    input_content = user_text
 
     with trace("Sales Bot", group_id=chat_id):
         try:
             result = await _run_agent(alina, input_content, context, session)
             response = result.final_output or ""
-
-            if image_data:
-                logger.info(f"[{chat_id}] [Vision] Agent response: {response[:200]}")
 
             if response:
                 await db.save_message(chat_id, "assistant", response)
