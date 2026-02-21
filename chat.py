@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from datetime import datetime, timedelta
 
 import aiosqlite
 
@@ -86,6 +87,21 @@ async def _process(chat_id: str, sender_name: str, text: str, image_data: bytes 
 
             # Reset nudge count on client message
             await db.update_client(chat_id, nudge_count=0)
+
+            # Reset client_status to 'active' if re-engaging after 24h in terminal status
+            client = await db.get_client(chat_id)
+            if client:
+                status = client.get("client_status", "active")
+                if status in ("ordered", "fitting", "declined"):
+                    last_bot_str = client.get("last_bot_message_at")
+                    if last_bot_str:
+                        try:
+                            last_bot = datetime.fromisoformat(last_bot_str)
+                            if datetime.now() - last_bot > timedelta(hours=24):
+                                await db.set_client_status(chat_id, "active")
+                                logger.info(f"[{chat_id}] Status reset to active (re-engagement after 24h)")
+                        except (ValueError, TypeError):
+                            pass
 
             # Generate AI response
             response = await ai.generate_response(chat_id, text, sender_name, image_data=image_data)

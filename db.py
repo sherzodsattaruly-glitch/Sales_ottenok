@@ -48,6 +48,13 @@ def init_db():
         )
     """)
 
+    # Migration: add client_status column
+    try:
+        c.execute("ALTER TABLE clients ADD COLUMN client_status TEXT DEFAULT 'active'")
+        c.execute("UPDATE clients SET client_status = 'active' WHERE client_status IS NULL")
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+
     conn.commit()
     conn.close()
 
@@ -157,6 +164,26 @@ async def get_sent_photo_ids(chat_id: str) -> set[str]:
         return {r[0] for r in rows}
 
 
+async def set_client_status(chat_id: str, status: str):
+    """Set client lifecycle status: active | ordered | fitting | declined."""
+    valid = {"active", "ordered", "fitting", "declined"}
+    if status not in valid:
+        raise ValueError(f"Invalid client_status: {status!r}. Must be one of {valid}")
+    await update_client(chat_id, client_status=status)
+
+
+async def get_recent_messages(chat_id: str, limit: int = 6) -> list[dict]:
+    """Последние N сообщений для LLM-классификатора."""
+    async with aiosqlite.connect(SQLITE_DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cur = await db.execute(
+            "SELECT role, content FROM conversations WHERE chat_id = ? ORDER BY created_at DESC LIMIT ?",
+            (chat_id, limit),
+        )
+        rows = await cur.fetchall()
+        return [{"role": r["role"], "content": r["content"]} for r in reversed(rows)]
+
+
 async def get_nudge_candidates() -> list[dict]:
     """Клиенты, которым потенциально нужен дожим."""
     async with aiosqlite.connect(SQLITE_DB_PATH) as db:
@@ -166,5 +193,6 @@ async def get_nudge_candidates() -> list[dict]:
             WHERE handoff = 0
               AND nudge_count < 2
               AND last_bot_message_at > last_client_message_at
+              AND client_status = 'active'
         """)
         return [dict(r) for r in await cur.fetchall()]
