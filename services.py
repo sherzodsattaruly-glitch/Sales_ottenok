@@ -98,6 +98,9 @@ async def get_catalog() -> list[dict]:
         "количество": "quantity",
         "кол-во": "quantity",
         "кол-во сумки": "bag_quantity",
+        "спец цена": "special_price",
+        "спец. цена": "special_price",
+        "special_price": "special_price",
     }
     # Колонки-размеры (числа = номера размеров обуви)
     _SIZE_COLUMNS = {"35", "36", "37", "38", "39", "40", "41", "42", "43", "44"}
@@ -182,6 +185,9 @@ def format_catalog_for_prompt(catalog: list[dict]) -> str:
             line += f" | цвета: {colors}"
         if qty:
             line += f" | наличие: {qty}"
+        special_price = item.get("special_price", "")
+        if special_price:
+            line += f" | спеццена: {special_price} (до 1 марта)"
         lines.append(line)
     return "\n".join(lines)
 
@@ -222,6 +228,7 @@ async def check_stock(product: str, size: str = "", color: str = "") -> dict:
             available_items.append({
                 "product": item.get("product_name"),
                 "price": item.get("price", ""),
+                "special_price": item.get("special_price", ""),
                 "sizes": item.get("sizes", ""),
                 "colors": item.get("colors", ""),
             })
@@ -337,13 +344,11 @@ async def load_photo_index():
 
 
 def _make_photo_caption(product_key: str, catalog: list[dict]) -> str:
-    """Сформировать подпись к фото: название товара + цена из каталога."""
-    # Красивое название: capitalize каждого слова из ключа индекса
+    """Сформировать подпись к фото: только название товара, без цены."""
     display_name = product_key.title()
 
-    # Поиск цены в каталоге по пересечению токенов
+    # Поиск названия в каталоге по пересечению токенов
     key_tokens = set(product_key.lower().split())
-    best_price = ""
     best_overlap = 0
     for item in catalog:
         name = item.get("product_name", "").lower()
@@ -351,11 +356,8 @@ def _make_photo_caption(product_key: str, catalog: list[dict]) -> str:
         overlap = len(key_tokens & name_tokens)
         if overlap > best_overlap:
             best_overlap = overlap
-            best_price = item.get("price", "")
             display_name = item.get("product_name", display_name)
 
-    if best_price:
-        return f"{display_name} — {best_price}"
     return display_name
 
 
