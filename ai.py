@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from dataclasses import dataclass
@@ -47,6 +48,10 @@ class ChatContext:
 
 # ── Tools ────────────────────────────────────────────────────
 
+# Lock per chat — предотвращает параллельную отправку дублей фото
+_photo_locks: dict[str, asyncio.Lock] = {}
+
+
 @function_tool
 async def check_stock(
     ctx: RunContextWrapper[ChatContext],
@@ -68,25 +73,31 @@ async def get_photos(
     color: str = "",
 ) -> str:
     """Найти и отправить фото товара клиенту. Вызови когда клиент спрашивает 'покажите', 'какие есть', или при первом упоминании товара.
+    ВАЖНО: Вызывай ОДИН раз на товар, НЕ вызывай отдельно на каждый цвет — инструмент сам покажет все доступные цвета.
     ВАЖНО: ВСЕГДА вызывай этот инструмент заново при каждом запросе клиента, даже если ранее фото не были найдены — ассортимент и фото обновляются."""
     chat_id = ctx.context.chat_id
     logger.info(f"[{chat_id}] Tool: get_photos(product={product}, color={color})")
 
-    photos = await services.find_photos(product, color)
-    if not photos:
-        return json.dumps({"sent": False, "reason": "Фото не найдены"})
+    # Lock per chat — предотвращает дубли при параллельных вызовах
+    if chat_id not in _photo_locks:
+        _photo_locks[chat_id] = asyncio.Lock()
 
-    # Фильтруем уже отправленные фото по file_id
-    already_sent = await db.get_sent_photo_ids(chat_id)
-    new_photos = [p for p in photos if p["file_id"] not in already_sent]
+    async with _photo_locks[chat_id]:
+        photos = await services.find_photos(product, color)
+        if not photos:
+            return json.dumps({"sent": False, "reason": "Фото не найдены"})
 
-    if not new_photos:
-        return json.dumps({"sent": False, "reason": "Фото этого товара уже отправлялись клиенту"})
+        # Фильтруем уже отправленные фото по file_id
+        already_sent = await db.get_sent_photo_ids(chat_id)
+        new_photos = [p for p in photos if p["file_id"] not in already_sent]
 
-    await send_photos(chat_id, new_photos)
-    await db.mark_photos_sent(chat_id, [p["file_id"] for p in new_photos])
-    captions = [p["caption"] for p in new_photos if p.get("caption")]
-    return json.dumps({"sent": True, "count": len(new_photos), "captions": captions}, ensure_ascii=False)
+        if not new_photos:
+            return json.dumps({"sent": False, "reason": "Фото этого товара уже отправлялись клиенту"})
+
+        await send_photos(chat_id, new_photos)
+        await db.mark_photos_sent(chat_id, [p["file_id"] for p in new_photos])
+        captions = [p["caption"] for p in new_photos if p.get("caption")]
+        return json.dumps({"sent": True, "count": len(new_photos), "captions": captions}, ensure_ascii=False)
 
 
 @function_tool
@@ -154,7 +165,7 @@ SYSTEM_PROMPT_TEMPLATE = """Ты — Алина, менеджер по прод�
 7. Оформление → вызови check_stock, потом submit_order
 
 ПРАВИЛА:
-- Если клиент просит "обувь" без уточнения категории — спроси какая именно: туфли, кроссовки, балетки, босоножки и т.д. НЕ показывай всю обувь сразу
+- Если клиент просит "обувь" без уточнения категории — спроси какую именно категорию из имеющихся в каталоге. НЕ показывай всю обувь сразу. НЕ предлагай категории, которых нет в каталоге
 - НЕ называй цену сама. Цену и спеццену озвучивай ТОЛЬКО: (а) клиент прямо спросил "сколько стоит", "какая цена", "цена?"; (б) все данные для заказа уже собраны
 - Когда называешь цену — добавь фразу про выгоду
 - Если у товара есть спеццена и ты называешь цену — озвучь старую цену и предложи спеццену: "Обычная цена ... , но сейчас действует специальная цена ... до 1 марта ✨"

@@ -396,6 +396,11 @@ async def find_photos(product: str, color: str = "", max_photos: int = 6) -> lis
     # Сортируем по score desc
     matched.sort(key=lambda x: x[1], reverse=True)
 
+    # Отсекаем слабые совпадения (score 1) когда есть сильные (score >= 2)
+    best_score = matched[0][1]
+    if best_score >= 2:
+        matched = [(k, s) for k, s in matched if s >= 2]
+
     # Загружаем каталог для подписей (цена)
     catalog = await get_catalog()
 
