@@ -26,12 +26,17 @@ def _is_manager_command(chat_id: str, text: str) -> bool:
     return t.startswith("/handoff") or t.startswith("/bot ") or t.startswith("/reset")
 
 
-async def handle_message(chat_id: str, sender_name: str, text: str):
+async def handle_message(chat_id: str, sender_name: str, text: str, image_data: bytes | None = None):
     """Входная точка для всех сообщений."""
 
     # Manager commands bypass everything
     if _is_manager_command(chat_id, text):
         await _handle_manager_command(chat_id, text)
+        return
+
+    # Фото — обрабатываем сразу, без агрегации (изображение теряет контекст при объединении)
+    if image_data:
+        await _process(chat_id, sender_name, text, image_data=image_data)
         return
 
     # Aggregation
@@ -65,7 +70,7 @@ async def _flush_after_delay(chat_id: str):
         logger.error(f"[{chat_id}] Flush error: {e}", exc_info=True)
 
 
-async def _process(chat_id: str, sender_name: str, text: str):
+async def _process(chat_id: str, sender_name: str, text: str, image_data: bytes | None = None):
     """Process message with per-chat lock."""
     if chat_id not in _chat_locks:
         _chat_locks[chat_id] = asyncio.Lock()
@@ -83,7 +88,7 @@ async def _process(chat_id: str, sender_name: str, text: str):
             await db.update_client(chat_id, nudge_count=0)
 
             # Generate AI response
-            response = await ai.generate_response(chat_id, text, sender_name)
+            response = await ai.generate_response(chat_id, text, sender_name, image_data=image_data)
 
             if not response:
                 return

@@ -121,8 +121,7 @@ def extract_text(payload: WebhookPayload, raw_body: dict) -> str | None:
             return text
         return None
 
-    if md.typeMessage == "imageMessage" and md.imageMessageData:
-        return md.imageMessageData.caption or None
+    # imageMessage обрабатывается отдельно через is_image_message() (Vision)
 
     if md.typeMessage == "videoMessage" and md.videoMessageData:
         return md.videoMessageData.caption or None
@@ -140,6 +139,21 @@ def is_voice_message(payload: WebhookPayload, raw_body: dict) -> tuple[str, str]
     url = fd.get("downloadUrl", "")
     mime = fd.get("mimeType", "audio/ogg")
     return (url, mime) if url else None
+
+
+def is_image_message(payload: WebhookPayload, raw_body: dict) -> tuple[str, str, str] | None:
+    """Return (download_url, mime_type, caption) if image message, else None."""
+    md = payload.messageData
+    if not md or md.typeMessage != "imageMessage":
+        return None
+    raw_md = raw_body.get("messageData", {})
+    fd = raw_md.get("fileMessageData") or raw_md.get("imageMessageData") or {}
+    url = fd.get("downloadUrl", "")
+    mime = fd.get("mimeType", "image/jpeg")
+    caption = ""
+    if md.imageMessageData and md.imageMessageData.caption:
+        caption = md.imageMessageData.caption
+    return (url, mime, caption) if url else None
 
 
 # ── Polling ──────────────────────────────────────────────────
@@ -200,6 +214,22 @@ async def poll_loop(interval: float):
                             await handle_message(chat_id, sender_name, text)
                 except Exception as e:
                     logger.error(f"[{chat_id}] Voice error: {e}", exc_info=True)
+                if receipt_id is not None:
+                    await delete_notification(receipt_id)
+                continue
+
+            # Image (Vision)
+            image = is_image_message(payload, body)
+            if image:
+                url, mime, caption = image
+                try:
+                    image_bytes = await download_file(url)
+                    if image_bytes:
+                        text = caption or "Клиент отправил фото"
+                        logger.info(f"[{chat_id}] [Vision] Image received: {len(image_bytes)} bytes, caption={caption[:50] if caption else 'none'}")
+                        await handle_message(chat_id, sender_name, text, image_data=image_bytes)
+                except Exception as e:
+                    logger.error(f"[{chat_id}] [Vision] Image download error: {e}", exc_info=True)
                 if receipt_id is not None:
                     await delete_notification(receipt_id)
                 continue
@@ -298,6 +328,23 @@ async def webhook(request: Request):
             except Exception as e:
                 logger.error(f"[{chat_id}] Voice error: {e}", exc_info=True)
         asyncio.create_task(_process_voice())
+        return Response(status_code=200)
+
+    # Image (Vision)
+    image = is_image_message(payload, body)
+    if image:
+        url, mime, caption = image
+        async def _process_image():
+            try:
+                from greenapi_client import download_file
+                image_bytes = await download_file(url)
+                if image_bytes:
+                    text = caption or "Клиент отправил фото"
+                    logger.info(f"[{chat_id}] [Vision] Image received: {len(image_bytes)} bytes, caption={caption[:50] if caption else 'none'}")
+                    await handle_message(chat_id, sender_name, text, image_data=image_bytes)
+            except Exception as e:
+                logger.error(f"[{chat_id}] [Vision] Image download error: {e}", exc_info=True)
+        asyncio.create_task(_process_image())
         return Response(status_code=200)
 
     text = extract_text(payload, body)

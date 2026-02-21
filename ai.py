@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import logging
 from dataclasses import dataclass
@@ -178,6 +179,14 @@ SYSTEM_PROMPT_TEMPLATE = """Ты — Алина, менеджер по прод�
 - "какой у вас адрес?" = вопрос про адрес магазина, НЕ заказ
 - Если не можешь помочь → handoff_to_manager
 
+КОГДА КЛИЕНТ ПРИСЫЛАЕТ ФОТО:
+- Внимательно рассмотри изображение
+- Определи тип товара (обувь, сумка, аксессуар), бренд, цвет, модель
+- Вызови check_stock чтобы проверить наличие похожего товара
+- Вызови get_photos чтобы показать похожие товары из нашего ассортимента
+- Если точного совпадения нет — предложи ближайшие альтернативы
+- НЕ описывай фото клиенту дословно ("я вижу на фото..."), просто действуй как менеджер
+
 ДОЖИМ НА ПОКУПКУ:
 - Алматы: "оформите онлайн, заберите в магазине или отправим через Яндекс/InDrive"
 - Другой город: "оформите онлайн, отправим Казпочтой"
@@ -249,18 +258,32 @@ alina = Agent[ChatContext](
 # ── Main generate ────────────────────────────────────────────
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
-async def _run_agent(agent, user_text, context, session):
+async def _run_agent(agent, input_content, context, session):
     """Запуск агента с retry на ошибки API."""
     return await Runner.run(
         agent,
-        input=user_text,
+        input=input_content,
         context=context,
         session=session,
         max_turns=AGENT_MAX_TURNS,
     )
 
 
-async def generate_response(chat_id: str, user_text: str, sender_name: str = "") -> str:
+def _build_multimodal_input(user_text: str, image_data: bytes) -> list[dict]:
+    """Формирует мультимодальный input (текст + изображение) для Runner."""
+    b64 = base64.b64encode(image_data).decode()
+    return [
+        {"type": "input_text", "text": user_text},
+        {"type": "input_image", "image_url": f"data:image/jpeg;base64,{b64}"},
+    ]
+
+
+async def generate_response(
+    chat_id: str,
+    user_text: str,
+    sender_name: str = "",
+    image_data: bytes | None = None,
+) -> str:
     """Сгенерировать ответ на сообщение клиента. Возвращает текст (разделённый |||)."""
     context = ChatContext(chat_id=chat_id, sender_name=sender_name)
     session = SQLiteSession(session_id=chat_id, db_path=AGENT_SESSIONS_DB_PATH)
@@ -268,10 +291,20 @@ async def generate_response(chat_id: str, user_text: str, sender_name: str = "")
     # Сохраняем user message для аналитики/nudge (session хранит для LLM отдельно)
     await db.save_message(chat_id, "user", user_text, sender_name)
 
+    # Мультимодальный input для Vision
+    if image_data:
+        input_content = _build_multimodal_input(user_text, image_data)
+        logger.info(f"[{chat_id}] [Vision] Sending image to agent ({len(image_data)} bytes), text: {user_text[:80]}")
+    else:
+        input_content = user_text
+
     with trace("Sales Bot", group_id=chat_id):
         try:
-            result = await _run_agent(alina, user_text, context, session)
+            result = await _run_agent(alina, input_content, context, session)
             response = result.final_output or ""
+
+            if image_data:
+                logger.info(f"[{chat_id}] [Vision] Agent response: {response[:200]}")
 
             if response:
                 await db.save_message(chat_id, "assistant", response)
