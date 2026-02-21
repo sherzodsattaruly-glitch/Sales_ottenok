@@ -293,11 +293,20 @@ async def _run_agent(agent, input_content, context, session):
 
 
 def _build_multimodal_input(user_text: str, image_data: bytes) -> list[dict]:
-    """Формирует мультимодальный input (текст + изображение) для Runner."""
+    """Формирует мультимодальный input (текст + изображение) для Runner.
+
+    Responses API ожидает message-обёртку с content-массивом внутри.
+    """
     b64 = base64.b64encode(image_data).decode()
     return [
-        {"type": "input_text", "text": user_text},
-        {"type": "input_image", "image_url": f"data:image/jpeg;base64,{b64}"},
+        {
+            "role": "user",
+            "type": "message",
+            "content": [
+                {"type": "input_text", "text": user_text},
+                {"type": "input_image", "image_url": f"data:image/jpeg;base64,{b64}"},
+            ],
+        }
     ]
 
 
